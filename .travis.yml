@@ -10,7 +10,7 @@ after_success: |
   git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
 env:
   global:
-    secure: esVMgmgebMrNf4P3LQsq9kLoZ0T0lZkFCNvB+CN4cVw9fkaAw19RaqPLfsJtOGFfe6j9Co+4xuT4LgpKoED3dG1/oYl2Dl+vifZMgw05EF4lLgDVOnbFoBpVxp7OekQgrPc2PBExfNoROBLfKoOfC4W/cdbWuynXmyrNGBK10Ds=
+  - secure: kWRcECQY6H/4ckG5A5ss4zbnzTRzbz9p6wQNFpMmL8WE1yEq/Dysdxp9JALSRGVsTe3qwDTbP1GiVAci8GkCPfpDk5qDcvGIM5ePJArWw8omitlu4QhRUG6oZmsm3Z0F01XwbT8rhIjjqp06+kiQ4d45VpkK2mIPVTP9FFvo5DU=
 notifications:
   email:
     on_success: never
