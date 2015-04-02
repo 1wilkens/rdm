@@ -5,6 +5,10 @@ version = "0.0.1"
 authors = ["Florian Wilkens <mrfloya_github@outlook.com>"]
 
 
+[dependencies]
+pam-auth = "*"
+users    = "*"
+
 [dependencies.rgtk]
 git = "https://github.com/jeremyletang/rgtk.git"
 features = ["GTK_3_14"]
