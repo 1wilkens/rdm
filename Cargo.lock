@@ -2,7 +2,7 @@
 name = "rdm"
 version = "0.0.1"
 dependencies = [
- "pam-auth 0.0.5-pre (registry+https://github.com/rust-lang/crates.io-index)",
+ "pam-auth 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "rgtk 0.0.1 (git+https://github.com/jeremyletang/rgtk.git)",
  "users 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -79,7 +79,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "pam-auth"
-version = "0.0.5-pre"
+version = "0.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "c_vec 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
