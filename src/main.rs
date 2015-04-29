@@ -1,6 +1,7 @@
 #![feature(convert, path_ext)]
 
-extern crate rgtk;
+extern crate gdk;
+extern crate gtk;
 extern crate pam_auth;
 
 mod constants;
@@ -9,7 +10,7 @@ mod ui;
 use constants::*;
 use ui::*;
 
-use rgtk::*;
+//use gtk::*;
 
 use std::process::Command;
 
@@ -31,7 +32,7 @@ fn main() {
     }
 
     // initialize gtk
-    gtk::init();
+    ::gtk::init();
 
     // get ui components
     let mut ui = ui::RdmUi::from_theme("/home/florian/src/rust/rdm/res/ui.glade");
@@ -39,9 +40,9 @@ fn main() {
     // setup event handlers
     ui.setup_events();
 
-    // fit window to screen size and show it
-    ui.prepare_window();
+    // show window
+    ui.show();
 
     // start gtk main event loop
-    gtk::main();
+    ::gtk::main();
 }

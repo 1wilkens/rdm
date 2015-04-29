@@ -2,9 +2,10 @@
 name = "rdm"
 version = "0.0.1"
 dependencies = [
- "pam-auth 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "rgtk 0.0.1 (git+https://github.com/jeremyletang/rgtk.git)",
- "users 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gdk 0.0.1 (git+https://github.com/rust-gnome/gdk.git)",
+ "gtk 0.0.1 (git+https://github.com/rust-gnome/gtk.git)",
+ "pam-auth 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "users 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -18,11 +19,22 @@ version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "cairo"
+version = "0.0.1"
+source = "git+https://github.com/rust-gnome/cairo#f4cb0e2de63dc33b2266a1b994eb2497e6e465f1"
+dependencies = [
+ "c_vec 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cairo-sys 0.1.0 (git+https://github.com/rust-gnome/cairo)",
+ "glib 0.0.1 (git+https://github.com/rust-gnome/glib)",
+ "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "cairo-sys"
 version = "0.1.0"
-source = "git+https://github.com/jeremyletang/rgtk.git#ddcf5e37d6da809a45eed3de5c792e94edccc1bd"
+source = "git+https://github.com/rust-gnome/cairo#f4cb0e2de63dc33b2266a1b994eb2497e6e465f1"
 dependencies = [
- "libc 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkg-config 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -32,68 +44,118 @@ version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "gdk3-sys"
+name = "gdk"
+version = "0.0.1"
+source = "git+https://github.com/rust-gnome/gdk.git#fe635c91af64c336c9b35da6750566281c9de388"
+dependencies = [
+ "c_vec 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gdk-sys 0.1.0 (git+https://github.com/rust-gnome/gdk.git)",
+ "glib 0.0.1 (git+https://github.com/rust-gnome/glib)",
+ "glib-sys 0.1.0 (git+https://github.com/rust-gnome/glib)",
+ "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "gdk-sys"
 version = "0.1.0"
-source = "git+https://github.com/jeremyletang/rgtk.git#ddcf5e37d6da809a45eed3de5c792e94edccc1bd"
+source = "git+https://github.com/rust-gnome/gdk.git#fe635c91af64c336c9b35da6750566281c9de388"
 dependencies = [
  "bitflags 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "glib-sys 0.1.0 (git+https://github.com/jeremyletang/rgtk.git)",
- "libc 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "glib-sys 0.1.0 (git+https://github.com/rust-gnome/glib)",
+ "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkg-config 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "glib"
-version = "0.1.0"
-source = "git+https://github.com/jeremyletang/rgtk.git#ddcf5e37d6da809a45eed3de5c792e94edccc1bd"
+version = "0.0.1"
+source = "git+https://github.com/rust-gnome/glib#cce2a76eda9764fb25dd125b31f893fdfec5b8d8"
 dependencies = [
- "glib-sys 0.1.0 (git+https://github.com/jeremyletang/rgtk.git)",
- "libc 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "c_vec 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "glib-sys 0.1.0 (git+https://github.com/rust-gnome/glib)",
+ "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "glib-sys"
 version = "0.1.0"
-source = "git+https://github.com/jeremyletang/rgtk.git#ddcf5e37d6da809a45eed3de5c792e94edccc1bd"
+source = "git+https://github.com/rust-gnome/glib#cce2a76eda9764fb25dd125b31f893fdfec5b8d8"
 dependencies = [
- "libc 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkg-config 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
-name = "gtk3-sys"
+name = "gtk"
+version = "0.0.1"
+source = "git+https://github.com/rust-gnome/gtk.git#af584d23ca6f96e7945b60c352519e5da87b08eb"
+dependencies = [
+ "c_vec 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cairo 0.0.1 (git+https://github.com/rust-gnome/cairo)",
+ "cairo-sys 0.1.0 (git+https://github.com/rust-gnome/cairo)",
+ "gdk 0.0.1 (git+https://github.com/rust-gnome/gdk.git)",
+ "gdk-sys 0.1.0 (git+https://github.com/rust-gnome/gdk.git)",
+ "glib 0.0.1 (git+https://github.com/rust-gnome/glib)",
+ "glib-sys 0.1.0 (git+https://github.com/rust-gnome/glib)",
+ "gtk-sys 0.1.0 (git+https://github.com/rust-gnome/gtk.git)",
+ "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pango 0.0.1 (git+https://github.com/rust-gnome/pango)",
+ "pango-sys 0.1.0 (git+https://github.com/rust-gnome/pango)",
+]
+
+[[package]]
+name = "gtk-sys"
 version = "0.1.0"
-source = "git+https://github.com/jeremyletang/rgtk.git#ddcf5e37d6da809a45eed3de5c792e94edccc1bd"
+source = "git+https://github.com/rust-gnome/gtk.git#af584d23ca6f96e7945b60c352519e5da87b08eb"
 dependencies = [
  "gcc 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "gdk3-sys 0.1.0 (git+https://github.com/jeremyletang/rgtk.git)",
- "glib-sys 0.1.0 (git+https://github.com/jeremyletang/rgtk.git)",
- "libc 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gdk-sys 0.1.0 (git+https://github.com/rust-gnome/gdk.git)",
+ "glib-sys 0.1.0 (git+https://github.com/rust-gnome/glib)",
+ "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkg-config 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "libc"
-version = "0.1.4"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "pam-auth"
-version = "0.0.5"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "c_vec 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "pam-sys 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pam-sys 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "pam-sys"
-version = "0.0.4"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "gcc 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "pango"
+version = "0.0.1"
+source = "git+https://github.com/rust-gnome/pango#1bea8713ade75368310298c26a25eff16ff7617a"
+dependencies = [
+ "c_vec 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pango-sys 0.1.0 (git+https://github.com/rust-gnome/pango)",
+]
+
+[[package]]
+name = "pango-sys"
+version = "0.1.0"
+source = "git+https://github.com/rust-gnome/pango#1bea8713ade75368310298c26a25eff16ff7617a"
+dependencies = [
+ "glib-sys 0.1.0 (git+https://github.com/rust-gnome/glib)",
+ "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkg-config 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -103,24 +165,10 @@ version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "rgtk"
-version = "0.0.1"
-source = "git+https://github.com/jeremyletang/rgtk.git#ddcf5e37d6da809a45eed3de5c792e94edccc1bd"
-dependencies = [
- "c_vec 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
- "cairo-sys 0.1.0 (git+https://github.com/jeremyletang/rgtk.git)",
- "gdk3-sys 0.1.0 (git+https://github.com/jeremyletang/rgtk.git)",
- "glib 0.1.0 (git+https://github.com/jeremyletang/rgtk.git)",
- "glib-sys 0.1.0 (git+https://github.com/jeremyletang/rgtk.git)",
- "gtk3-sys 0.1.0 (git+https://github.com/jeremyletang/rgtk.git)",
- "libc 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "users"
-version = "0.3.1"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "libc 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

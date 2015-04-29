@@ -4,11 +4,17 @@ name = "rdm"
 version = "0.0.1"
 authors = ["Florian Wilkens <mrfloya_github@outlook.com>"]
 
+[profile.release]
+lto = true
 
 [dependencies]
 pam-auth = "*"
 users    = "*"
 
-[dependencies.rgtk]
-git = "https://github.com/jeremyletang/rgtk.git"
-features = ["GTK_3_14"]
+[dependencies.gtk]
+git = "https://github.com/rust-gnome/gtk.git"
+features = ["gtk_3_14"]
+
+[dependencies.gdk]
+git = "https://github.com/rust-gnome/gdk.git"
+features = ["gdk_3_14"]

@@ -1,8 +1,8 @@
 use constants::*;
 
-use rgtk::*;
-use rgtk::gtk::signals::{KeyPressEvent};
-use rgtk::gtk::widgets::{Builder, Entry, Image, Window};
+use gtk::{Connect, Entry, Image, Window, EntryTrait, WidgetTrait, WindowTrait};
+use gtk::widgets::{Builder};
+use gtk::signals::{KeyPressEvent};
 
 use std::path::PathBuf;
 
@@ -32,7 +32,11 @@ impl RdmUi {
         let user: Entry = b.get_object(THEME_COMPONENT_USER).expect("Failed to get user entry from theme!");
         let password: Entry = b.get_object(THEME_COMPONENT_PW).expect("Failed to get password entry from theme!");
 
-        bg.set_from_file(bg_file.to_str().unwrap());
+        // fit to screen dimensions
+        let (width, heigth) = (::gdk::screen_width(), ::gdk::screen_height());
+        w.set_default_size(width, heigth);
+
+        //bg.set_from_file(bg_file.to_str().unwrap());
 
         RdmUi {
             window:     w,
@@ -58,20 +62,14 @@ impl RdmUi {
                 let password = self.password.get_text().unwrap_or(String::new());
                 let success = ::pam_auth::login("rdm", user.as_ref(), password.as_ref());
                 if success {
-                    gtk::main_quit();
+                    ::gtk::main_quit();
                 }
             }
             false
         }));
     }
 
-    pub fn prepare_window(&mut self) {
-        use rgtk::gtk::{WidgetTrait, WindowTrait};
-
-        // fit to screen dimensions
-        let (width, heigth) = (gdk::screen_width(), gdk::screen_height());
-        self.window.set_default_size(width, heigth);
-
+    pub fn show(&mut self) {
         // show window
         self.window.show_all();
     }
