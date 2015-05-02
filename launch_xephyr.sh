@@ -1,3 +1,3 @@
 #!/bin/sh
 
-Xephyr -br -ac -noreset -screen 740x720 :1
+Xephyr -br -ac -noreset -screen 1280x1280 :1

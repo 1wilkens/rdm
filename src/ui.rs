@@ -1,8 +1,8 @@
 use constants::*;
 
-use gtk::{Connect, Entry, Image, Window, EntryTrait, WidgetTrait, WindowTrait};
+use gtk::{Entry, Image, Window, EntryTrait, WidgetTrait, WindowTrait};
 use gtk::widgets::{Builder};
-use gtk::signals::{KeyPressEvent};
+use gtk::signal::{Inhibit, WidgetSignals};
 
 use std::path::PathBuf;
 
@@ -36,7 +36,7 @@ impl RdmUi {
         let (width, heigth) = (::gdk::screen_width(), ::gdk::screen_height());
         w.set_default_size(width, heigth);
 
-        //bg.set_from_file(bg_file.to_str().unwrap());
+        bg.set_from_file(bg_file.to_str().unwrap());
 
         RdmUi {
             window:     w,
@@ -47,26 +47,32 @@ impl RdmUi {
     }
 
     pub fn setup_events(&mut self) {
-        Connect::connect(&self.user, KeyPressEvent::new(&mut |key|{
-            let keyval = unsafe { (*key).keyval };
-            if keyval == KEYVAL_ENTER {
+        self.user.connect_key_release_event(|_, e| {
+            let val = (*e).keyval;
+            if val == KEYVAL_ENTER {
                 self.password.grab_focus();
             }
-            false
-        }));
+            Inhibit(true)
+        });
 
-        Connect::connect(&self.password, KeyPressEvent::new(&mut |key|{
-            let keyval = unsafe { (*key).keyval };
-            if keyval == KEYVAL_ENTER {
-                let user = self.user.get_text().unwrap_or(String::new());
-                let password = self.password.get_text().unwrap_or(String::new());
-                let success = ::pam_auth::login("rdm", user.as_ref(), password.as_ref());
-                if success {
+        let u_entry = &self.user;
+        let p_entry = &self.password;
+
+        self.password.connect_key_release_event(move |_, e| {
+            let val = (*e).keyval;
+            if val == KEYVAL_ENTER {
+                let user = u_entry.get_text().unwrap_or(String::new());
+                let password = p_entry.get_text().unwrap_or(String::new());
+
+                if ::pam_auth::login("rdm", user.as_ref(), password.as_ref()) {
                     ::gtk::main_quit();
                 }
+                else {
+                    p_entry.set_text("");
+                }
             }
-            false
-        }));
+            Inhibit(true)
+        });
     }
 
     pub fn show(&mut self) {

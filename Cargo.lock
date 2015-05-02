@@ -15,15 +15,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "c_vec"
-version = "1.0.11"
+version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "cairo"
 version = "0.0.1"
-source = "git+https://github.com/rust-gnome/cairo#f4cb0e2de63dc33b2266a1b994eb2497e6e465f1"
+source = "git+https://github.com/rust-gnome/cairo#98e03df34b2250261cff83aedd57052fb92dec4b"
 dependencies = [
- "c_vec 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "c_vec 1.0.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "cairo-sys 0.1.0 (git+https://github.com/rust-gnome/cairo)",
  "glib 0.0.1 (git+https://github.com/rust-gnome/glib)",
  "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -32,7 +32,7 @@ dependencies = [
 [[package]]
 name = "cairo-sys"
 version = "0.1.0"
-source = "git+https://github.com/rust-gnome/cairo#f4cb0e2de63dc33b2266a1b994eb2497e6e465f1"
+source = "git+https://github.com/rust-gnome/cairo#98e03df34b2250261cff83aedd57052fb92dec4b"
 dependencies = [
  "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkg-config 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -40,15 +40,15 @@ dependencies = [
 
 [[package]]
 name = "gcc"
-version = "0.3.4"
+version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "gdk"
 version = "0.0.1"
-source = "git+https://github.com/rust-gnome/gdk.git#fe635c91af64c336c9b35da6750566281c9de388"
+source = "git+https://github.com/rust-gnome/gdk.git#7bd0d203cf22fbcd34528c8cebaa1622a4b31298"
 dependencies = [
- "c_vec 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "c_vec 1.0.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "gdk-sys 0.1.0 (git+https://github.com/rust-gnome/gdk.git)",
  "glib 0.0.1 (git+https://github.com/rust-gnome/glib)",
  "glib-sys 0.1.0 (git+https://github.com/rust-gnome/glib)",
@@ -58,7 +58,7 @@ dependencies = [
 [[package]]
 name = "gdk-sys"
 version = "0.1.0"
-source = "git+https://github.com/rust-gnome/gdk.git#fe635c91af64c336c9b35da6750566281c9de388"
+source = "git+https://github.com/rust-gnome/gdk.git#7bd0d203cf22fbcd34528c8cebaa1622a4b31298"
 dependencies = [
  "bitflags 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "glib-sys 0.1.0 (git+https://github.com/rust-gnome/glib)",
@@ -69,9 +69,8 @@ dependencies = [
 [[package]]
 name = "glib"
 version = "0.0.1"
-source = "git+https://github.com/rust-gnome/glib#cce2a76eda9764fb25dd125b31f893fdfec5b8d8"
+source = "git+https://github.com/rust-gnome/glib#7f3639a63a42ad9865bca705786374bb4711ca21"
 dependencies = [
- "c_vec 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "glib-sys 0.1.0 (git+https://github.com/rust-gnome/glib)",
  "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -79,7 +78,7 @@ dependencies = [
 [[package]]
 name = "glib-sys"
 version = "0.1.0"
-source = "git+https://github.com/rust-gnome/glib#cce2a76eda9764fb25dd125b31f893fdfec5b8d8"
+source = "git+https://github.com/rust-gnome/glib#7f3639a63a42ad9865bca705786374bb4711ca21"
 dependencies = [
  "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkg-config 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -88,9 +87,8 @@ dependencies = [
 [[package]]
 name = "gtk"
 version = "0.0.1"
-source = "git+https://github.com/rust-gnome/gtk.git#af584d23ca6f96e7945b60c352519e5da87b08eb"
+source = "git+https://github.com/rust-gnome/gtk.git#9606599773a08c8f9635e053c77fb46f1656525b"
 dependencies = [
- "c_vec 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "cairo 0.0.1 (git+https://github.com/rust-gnome/cairo)",
  "cairo-sys 0.1.0 (git+https://github.com/rust-gnome/cairo)",
  "gdk 0.0.1 (git+https://github.com/rust-gnome/gdk.git)",
@@ -106,9 +104,9 @@ dependencies = [
 [[package]]
 name = "gtk-sys"
 version = "0.1.0"
-source = "git+https://github.com/rust-gnome/gtk.git#af584d23ca6f96e7945b60c352519e5da87b08eb"
+source = "git+https://github.com/rust-gnome/gtk.git#9606599773a08c8f9635e053c77fb46f1656525b"
 dependencies = [
- "gcc 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gcc 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "gdk-sys 0.1.0 (git+https://github.com/rust-gnome/gdk.git)",
  "glib-sys 0.1.0 (git+https://github.com/rust-gnome/glib)",
  "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -134,7 +132,7 @@ name = "pam-sys"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "gcc 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gcc 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkg-config 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -142,9 +140,8 @@ dependencies = [
 [[package]]
 name = "pango"
 version = "0.0.1"
-source = "git+https://github.com/rust-gnome/pango#1bea8713ade75368310298c26a25eff16ff7617a"
+source = "git+https://github.com/rust-gnome/pango#15dd9004a8d9671970b69f7bd8a42804530b4c20"
 dependencies = [
- "c_vec 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "pango-sys 0.1.0 (git+https://github.com/rust-gnome/pango)",
 ]
@@ -152,7 +149,7 @@ dependencies = [
 [[package]]
 name = "pango-sys"
 version = "0.1.0"
-source = "git+https://github.com/rust-gnome/pango#1bea8713ade75368310298c26a25eff16ff7617a"
+source = "git+https://github.com/rust-gnome/pango#15dd9004a8d9671970b69f7bd8a42804530b4c20"
 dependencies = [
  "glib-sys 0.1.0 (git+https://github.com/rust-gnome/glib)",
  "libc 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
