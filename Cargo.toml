@@ -16,8 +16,8 @@ pam-auth = "*"
 
 [dependencies.gtk]
 version = "*"
-features = ["gtk_3_14"]
+features = ["gtk_3_10"]
 
 [dependencies.gdk]
 version = "*"
-features = ["gdk_3_14"]
+features = ["gdk_3_10"]
