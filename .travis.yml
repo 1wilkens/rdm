@@ -1,5 +1,8 @@
 language: rust
-install: sudo apt-get install libpam0g-dev libgtk-3-dev
+install:
+    - sudo add-apt-repository ppa:ricotz/testing
+    - sudo apt-get update
+    - sudo apt-get install libpam0g-dev libgtk-3-dev
 after_success: |
   [ $TRAVIS_BRANCH = master ] &&
   [ $TRAVIS_PULL_REQUEST = false ] &&
