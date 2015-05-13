@@ -3,18 +3,21 @@
 name = "rdm"
 version = "0.0.1"
 authors = ["Florian Wilkens <mrfloya_github@outlook.com>"]
+description = "Simple Display Manager inspired by SLiM"
+repository = "https://github.com/mrfloya/rdm"
+readme = "README.md"
+license = "MIT"
 
 [profile.release]
 lto = true
 
 [dependencies]
 pam-auth = "*"
-users    = "*"
 
 [dependencies.gtk]
-git = "https://github.com/rust-gnome/gtk.git"
+version = "*"
 features = ["gtk_3_14"]
 
 [dependencies.gdk]
-git = "https://github.com/rust-gnome/gdk.git"
+version = "*"
 features = ["gdk_3_14"]

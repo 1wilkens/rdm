@@ -10,8 +10,6 @@ mod ui;
 use constants::*;
 use ui::*;
 
-//use gtk::*;
-
 use std::process::Command;
 
 fn start_x_server() {

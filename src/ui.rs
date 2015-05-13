@@ -6,6 +6,8 @@ use gtk::signal::{Inhibit, WidgetSignals};
 
 use std::path::PathBuf;
 
+use pam_auth::Authenticator;
+
 pub struct RdmUi {
     pub window:     Window,
     pub background: Image,
@@ -25,12 +27,17 @@ impl RdmUi {
         bg_file.push(THEME_BACKGROUND_NAME);
         bg_file.set_extension(THEME_BACKGROUND_EXT);
 
-        let b = Builder::new_from_file(theme_file.to_str().unwrap()).expect("Failed to load default theme!");
+        let b = Builder::new_from_file(theme_file.to_str().unwrap())
+            .expect("Failed to load default theme!");
 
-        let w: Window = b.get_object(THEME_COMPONENT_WINDOW).expect("Failed to get main window from theme!");
-        let bg: Image = b.get_object(THEME_COMPONENT_BG).expect("Failed to get background image from theme!");
-        let user: Entry = b.get_object(THEME_COMPONENT_USER).expect("Failed to get user entry from theme!");
-        let password: Entry = b.get_object(THEME_COMPONENT_PW).expect("Failed to get password entry from theme!");
+        let w: Window = b.get_object(THEME_COMPONENT_WINDOW)
+            .expect("Failed to get main window from theme!");
+        let bg: Image = b.get_object(THEME_COMPONENT_BG)
+            .expect("Failed to get background image from theme!");
+        let user: Entry = b.get_object(THEME_COMPONENT_USER)
+            .expect("Failed to get user entry from theme!");
+        let password: Entry = b.get_object(THEME_COMPONENT_PW)
+            .expect("Failed to get password entry from theme!");
 
         // fit to screen dimensions
         let (width, heigth) = (::gdk::screen_width(), ::gdk::screen_height());
@@ -46,17 +53,19 @@ impl RdmUi {
         }
     }
 
-    pub fn setup_events(&mut self) {
-        self.user.connect_key_release_event(|_, e| {
+    pub fn setup_events(&self) {
+        let p_entry = self.password.clone();
+
+        self.user.connect_key_release_event(move |_, e| {
             let val = (*e).keyval;
             if val == KEYVAL_ENTER {
-                self.password.grab_focus();
+                p_entry.grab_focus();
             }
             Inhibit(true)
         });
 
-        let u_entry = &self.user;
-        let p_entry = &self.password;
+        let u_entry = self.user.clone();
+        let p_entry = self.password.clone();
 
         self.password.connect_key_release_event(move |_, e| {
             let val = (*e).keyval;
@@ -64,7 +73,12 @@ impl RdmUi {
                 let user = u_entry.get_text().unwrap_or(String::new());
                 let password = p_entry.get_text().unwrap_or(String::new());
 
-                if ::pam_auth::login("rdm", user.as_ref(), password.as_ref()) {
+                let mut auth = Authenticator::new(APPLICATION_NAME)
+                    .expect("Failed to get PAM authenticator!");
+                auth.set_credentials(&user, &password);
+
+                if auth.authenticate().is_ok() && auth.open_session().is_ok() {
+
                     ::gtk::main_quit();
                 }
                 else {

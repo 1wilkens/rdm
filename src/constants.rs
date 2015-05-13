@@ -1,3 +1,6 @@
+/* BASE CONSTANTS */
+pub const APPLICATION_NAME        : &'static str = "rdm";
+
 /* -- CONFIG SETTINGS -- */
 pub const DEFAULT_CONFIG_FILE     : &'static str = "/etc/rdm.conf";
 
