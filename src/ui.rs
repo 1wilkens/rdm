@@ -1,22 +1,22 @@
 use constants::*;
 
-use gtk::{Entry, Image, Window, EntryTrait, WidgetTrait, WindowTrait};
-use gtk::widgets::{Builder};
-use gtk::signal::{Inhibit, WidgetSignals};
+use gdk::{screen_width, screen_height};
+use gdk_pixbuf::Pixbuf;
+use gtk::{Builder, Entry, Image, Inhibit, Window, EntryExt, WidgetExt, WindowExt};
 
 use std::path::PathBuf;
 
 use pam_auth::Authenticator;
 
-pub struct RdmUi {
+pub struct Ui {
     pub window:     Window,
     pub background: Image,
     pub user:       Entry,
     pub password:   Entry
 }
 
-impl RdmUi {
-    pub fn from_theme(theme_name: &str) -> RdmUi {
+impl Ui {
+    pub fn from_theme(theme_name: &str) -> Ui {
         let theme_path = get_theme_path(theme_name, false);
 
         let mut theme_file = theme_path.clone();
@@ -27,8 +27,8 @@ impl RdmUi {
         bg_file.push(THEME_BACKGROUND_NAME);
         bg_file.set_extension(THEME_BACKGROUND_EXT);
 
-        let b = Builder::new_from_file(theme_file.to_str().unwrap())
-            .expect("Failed to load default theme!");
+
+        let b = Builder::new_from_file(theme_file.to_str().unwrap());
 
         let w: Window = b.get_object(THEME_COMPONENT_WINDOW)
             .expect("Failed to get main window from theme!");
@@ -40,12 +40,15 @@ impl RdmUi {
             .expect("Failed to get password entry from theme!");
 
         // fit to screen dimensions
-        let (width, heigth) = (::gdk::screen_width(), ::gdk::screen_height());
+        let (width, heigth) = (screen_width(), screen_height());
         w.set_default_size(width, heigth);
 
-        bg.set_from_file(bg_file.to_str().unwrap());
+        let pb = Pixbuf::new_from_file_at_scale(bg_file.to_str().unwrap(), width, heigth, false)
+            .ok().expect(&format!("Failed to get background image pixbuf: {:?}", bg_file));
 
-        RdmUi {
+        bg.set_from_pixbuf(Some(&pb));
+
+        Ui {
             window:     w,
             background: bg,
             user:       user,
@@ -57,7 +60,7 @@ impl RdmUi {
         let p_entry = self.password.clone();
 
         self.user.connect_key_release_event(move |_, e| {
-            let val = (*e).keyval;
+            let val = (*e).get_keyval();
             if val == KEYVAL_ENTER {
                 p_entry.grab_focus();
             }
@@ -68,20 +71,26 @@ impl RdmUi {
         let p_entry = self.password.clone();
 
         self.password.connect_key_release_event(move |_, e| {
-            let val = (*e).keyval;
+            let val = (*e).get_keyval();
             if val == KEYVAL_ENTER {
                 let user = u_entry.get_text().unwrap_or(String::new());
                 let password = p_entry.get_text().unwrap_or(String::new());
 
                 let mut auth = Authenticator::new(APPLICATION_NAME)
                     .expect("Failed to get PAM authenticator!");
+                auth.close_on_drop = true;  //TODO: change this in release
                 auth.set_credentials(&user, &password);
 
-                if auth.authenticate().is_ok() && auth.open_session().is_ok() {
-
+                let code1 = auth.authenticate();
+                let code2 = auth.open_session();
+                if code1.is_ok() && code2.is_ok() {
+                    println!("Auth okay sleeping for 10 seconds");
+                    ::std::thread::sleep(::std::time::Duration::new(10, 0));
+                    println!("Sleep finished. Exiting now");
                     ::gtk::main_quit();
                 }
                 else {
+                    println!("authenticate={:?}, open_session={:?}", code1, code2);
                     p_entry.set_text("");
                 }
             }
@@ -96,7 +105,6 @@ impl RdmUi {
 }
 
 fn get_theme_path(theme_name: &str, default: bool) -> PathBuf {
-    use std::fs::PathExt;
 
     let mut theme_path = PathBuf::new();
     theme_path.push(THEME_BASE_PATH);

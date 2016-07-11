@@ -1,6 +1,10 @@
 /* BASE CONSTANTS */
 pub const APPLICATION_NAME        : &'static str = "rdm";
 
+/* DBUS CONSTANTS */
+pub const DBUS_SERVICE_NAME       : &'static str = "com.github.mrfloya.RDM";
+pub const DBUS_ROOT_PATH          : &'static str = "com/github/mrfloya/RDM";
+
 /* -- CONFIG SETTINGS -- */
 pub const DEFAULT_CONFIG_FILE     : &'static str = "/etc/rdm.conf";
 
