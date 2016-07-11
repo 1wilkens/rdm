@@ -4,7 +4,6 @@
 <busconfig>
         <policy user="root">
                 <allow own="com.github.mrfloya.RDM"/>
-
                 <allow send_destination="com.github.mrfloya.RDM"/>
                 <allow send_interface="com.github.mrfloya.RDM"/>
         </policy>
