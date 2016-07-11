@@ -4,7 +4,11 @@ use gdk::{screen_width, screen_height};
 use gdk_pixbuf::Pixbuf;
 use gtk::{Builder, Entry, Image, Inhibit, Window, EntryExt, WidgetExt, WindowExt};
 
+use std::env;
+use std::io::Write;
 use std::path::PathBuf;
+use std::process::Command;
+use std::thread;
 
 use pam_auth::Authenticator;
 
@@ -12,7 +16,7 @@ pub struct Ui {
     pub window:     Window,
     pub background: Image,
     pub user:       Entry,
-    pub password:   Entry
+    pub secret:     Entry
 }
 
 impl Ui {
@@ -27,7 +31,6 @@ impl Ui {
         bg_file.push(THEME_BACKGROUND_NAME);
         bg_file.set_extension(THEME_BACKGROUND_EXT);
 
-
         let b = Builder::new_from_file(theme_file.to_str().unwrap());
 
         let w: Window = b.get_object(THEME_COMPONENT_WINDOW)
@@ -36,8 +39,8 @@ impl Ui {
             .expect("Failed to get background image from theme!");
         let user: Entry = b.get_object(THEME_COMPONENT_USER)
             .expect("Failed to get user entry from theme!");
-        let password: Entry = b.get_object(THEME_COMPONENT_PW)
-            .expect("Failed to get password entry from theme!");
+        let secret: Entry = b.get_object(THEME_COMPONENT_SECRET)
+            .expect("Failed to get secret entry from theme!");
 
         // fit to screen dimensions
         let (width, heigth) = (screen_width(), screen_height());
@@ -52,12 +55,12 @@ impl Ui {
             window:     w,
             background: bg,
             user:       user,
-            password:   password
+            secret:     secret
         }
     }
 
     pub fn setup_events(&self) {
-        let p_entry = self.password.clone();
+        let p_entry = self.secret.clone();
 
         self.user.connect_key_release_event(move |_, e| {
             let val = (*e).get_keyval();
@@ -68,9 +71,10 @@ impl Ui {
         });
 
         let u_entry = self.user.clone();
-        let p_entry = self.password.clone();
+        let p_entry = self.secret.clone();
 
-        self.password.connect_key_release_event(move |_, e| {
+        self.secret.connect_key_release_event(move |_, e| {
+
             let val = (*e).get_keyval();
             if val == KEYVAL_ENTER {
                 let user = u_entry.get_text().unwrap_or(String::new());
@@ -78,15 +82,15 @@ impl Ui {
 
                 let mut auth = Authenticator::new(APPLICATION_NAME)
                     .expect("Failed to get PAM authenticator!");
-                auth.close_on_drop = true;  //TODO: change this in release
+                auth.close_on_drop = false;  //TODO: change this in release
                 auth.set_credentials(&user, &password);
 
                 let code1 = auth.authenticate();
                 let code2 = auth.open_session();
                 if code1.is_ok() && code2.is_ok() {
-                    println!("Auth okay sleeping for 10 seconds");
-                    ::std::thread::sleep(::std::time::Duration::new(10, 0));
-                    println!("Sleep finished. Exiting now");
+                    log_info!("Authentication successful");
+                    xinit(&user);
+
                     ::gtk::main_quit();
                 }
                 else {
@@ -102,6 +106,41 @@ impl Ui {
         // show window
         self.window.show_all();
     }
+}
+
+fn xinit(name: &String) {
+    use ::users::os::unix::UserExt;
+
+    log_info!("Running 'xinit' functionality in new thread");
+
+    let name = name.clone();
+    thread::spawn(move || {
+        log_info!("Child thread: Executing .xinitrc");
+
+        // Setup variables
+        let user = ::users::get_user_by_name(&name)
+            .expect(&format!("Could not get user by name: {}", name));
+        let dir = user.home_dir();
+        let shell = user.shell();
+        let shell_str = shell.to_str().unwrap();
+        let cmd_args = format!("exec {} --login .xinitrc", shell_str);
+        log_info!("Child thread: cmg_args={}", cmd_args);
+        log_info!("Complete command '{} -c {}'", shell_str, cmd_args);
+
+        // Chnange into home_dir
+        //log_info!("Child thread: Change into home directory");
+        //env::set_current_dir(dir)
+        //    .expect(&format!("Failed to change into home directory: {:?} ", dir));
+
+        // Load ~/.xinitrc
+        log_info!("Child thread: Load ~/.xinitrc");
+        Command::new(shell)
+            .arg("-c")
+            .arg(&cmd_args)
+            .current_dir(dir)
+            .spawn()
+            .unwrap_or_else(|e| panic!("Failed to start session: {}", e));
+    });
 }
 
 fn get_theme_path(theme_name: &str, default: bool) -> PathBuf {

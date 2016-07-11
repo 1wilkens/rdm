@@ -12,3 +12,7 @@
 
 # Ignore tmp files
 *~
+
+# Ignore debug results (*.log, *.txt)
+*.log
+*.txt

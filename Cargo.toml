@@ -16,21 +16,14 @@ lto = true
 debug = []
 
 [dependencies]
-log = "0.3.4"
-env_logger = "0.3.2"
-
-[dependencies.dbus]
-version = "0.3.4"
-
-[dependencies.pam-auth]
-version = "0.3.0"
+log = "0.3.6"
+env_logger = "0.3.4"
+dbus = "0.3.4"
+gdk = "0.5.0"
+gdk-pixbuf = "0.1.0"
+pam-auth = "0.3.0"
+users = "0.5.1"
 
 [dependencies.gtk]
 version = "0.1.0"
 features = ["v3_10"]
-
-[dependencies.gdk]
-version = "0.5.0"
-
-[dependencies.gdk-pixbuf]
-version = "0.1.0"

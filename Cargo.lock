@@ -3,12 +3,13 @@ name = "rdm"
 version = "0.0.1"
 dependencies = [
  "dbus 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "env_logger 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "env_logger 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "gdk 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gdk-pixbuf 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "gtk 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "pam-auth 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "users 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -77,7 +78,7 @@ dependencies = [
 
 [[package]]
 name = "env_logger"
-version = "0.3.3"
+version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "log 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -352,6 +353,14 @@ dependencies = [
 [[package]]
 name = "users"
 version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "libc 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "users"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.2.13 (registry+https://github.com/rust-lang/crates.io-index)",
