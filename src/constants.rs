@@ -10,7 +10,7 @@ pub const DEFAULT_CONFIG_FILE     : &'static str = "/etc/rdm.conf";
 
 pub const DEFAULT_SH_EXECUTABLE   : &'static str = "/bin/sh";
 pub const DEFAULT_X_EXECUTABLE    : &'static str = "/usr/bin/X";
-pub const DEFAULT_X_ARGS          : &'static str = "-logverbose";
+pub const DEFAULT_X_ARGS          : &'static str = "-nolisten tcp";
 pub const DEFAULT_X_DISPLAY       : &'static str = ":0";
 pub const DEFAULT_X_VT            : &'static str = "vt01";
 
