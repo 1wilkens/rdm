@@ -45,7 +45,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="password">
+              <object class="GtkEntry" id="secret">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="halign">center</property>
