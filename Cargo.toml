@@ -9,11 +9,7 @@ readme = "README.md"
 license = "MIT"
 
 [profile.release]
-debug-assertions = false
 lto = true
-
-[features]
-debug = []
 
 [dependencies]
 env_logger = "0.3.4"

@@ -28,33 +28,16 @@ use ui::*;
 use std::io::Write;
 use std::process::{Child, Command};
 
-#[cfg(not(feature = "debug"))]
-fn start_x_server() -> Child {
-    log_info!("Executing '{} {} {} {}'", DEFAULT_X_EXECUTABLE, DEFAULT_X_ARGS, DEFAULT_X_DISPLAY, DEFAULT_X_VT);
-    let process = Command::new(DEFAULT_X_EXECUTABLE)
-        .arg(DEFAULT_X_ARGS)
-        .arg(DEFAULT_X_DISPLAY)
-        .arg(DEFAULT_X_VT)
-        .spawn()
-        .unwrap_or_else(|e| panic!("Failed to start X: {}", e));
-    log_info!("Started X.. Sleeping 1 second");
-    ::std::thread::sleep(::std::time::Duration::from_millis(1000));
-    log_info!("Slept 1 second");
-    return process;
-}
-
-#[cfg(feature = "debug")]
-fn start_x_server() {
-
-}
-
 fn main() {
     env_logger::init().unwrap();
 
-    let x = server::Xserver::new();
-    return;
+    match ::std::fs::create_dir(DEFAULT_RUN_DIR) {
+        Ok(_)   => {},
+        Err(e)  => panic!("Failed to create runtime dir: {}", e)
+    }
 
-    let mut x = start_x_server();
+    let mut x = server::Xserver::new();
+    x.start();
 
     //let mgr = manager::Manager::new();
     //mgr.start();
@@ -74,6 +57,6 @@ fn main() {
     // start gtk main event loop
     ::gtk::main();
 
-    println!("Exited gtk::main loop, stopping X server");
-    x.kill().expect("Failed to stop X server");
+    println!("Exited gtk::main loop, cleaning up");
+    let res = ::std::fs::remove_dir(DEFAULT_RUN_DIR);
 }

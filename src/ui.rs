@@ -77,6 +77,8 @@ impl Ui {
 
             let val = (*e).get_keyval();
             if val == KEYVAL_ENTER {
+                ::gtk::main_quit();
+
                 let user = u_entry.get_text().unwrap_or(String::new());
                 let password = p_entry.get_text().unwrap_or(String::new());
 

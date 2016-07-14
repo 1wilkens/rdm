@@ -7,14 +7,25 @@ pub const DBUS_ROOT_PATH          : &'static str = "com/github/mrfloya/RDM";
 
 /* -- CONFIG SETTINGS -- */
 pub const DEFAULT_CONFIG_FILE     : &'static str = "/etc/rdm.conf";
-
 pub const DEFAULT_RUN_DIR         : &'static str = "/var/run/rdm";
 
-pub const DEFAULT_SH_EXECUTABLE   : &'static str = "/bin/sh";
-pub const DEFAULT_X_EXECUTABLE    : &'static str = "/usr/bin/X";
-pub const DEFAULT_X_ARGS          : &'static str = "-logverbose";
-pub const DEFAULT_X_DISPLAY       : &'static str = ":0";
-pub const DEFAULT_X_VT            : &'static str = "vt01";
+// Change this to prevent automatic X server start e.g.
+pub const TESTING                 : bool = false;
+
+/* -- EXECUTABLES / DIRECTORIES -- */
+pub const SH_EXECUTABLE           : &'static str = "/bin/sh";
+pub const X_EXECUTABLE            : &'static str = "/usr/bin/X";
+pub const XAUTH_EXECUTABLE        : &'static str = "/usr/bin/xauth";
+
+pub const XSESSIONS_DIRECTORY     : &'static str = "/usr/share/xsessions";
+
+/* -- X SERVER SETTINGS --*/
+pub const X_DEFAULT_ARGS          : [&'static str; 1]
+    = [/*"-nolisten", "tcp", */"-logverbose"];
+pub const X_DEFAULT_DISPLAY       : &'static str = ":0";
+pub const X_DEFAULT_VT            : &'static str = "vt01";
+pub const X_AUTH_ARG              : &'static str = "-auth";
+pub const X_AUTHORITY_FILE        : &'static str = ".Xauthority";
 
 /* -- THEME SETTINGS -- */
 pub const THEME_BASE_PATH         : &'static str = "/usr/share/rdm/themes/";
@@ -28,7 +39,7 @@ pub const THEME_BACKGROUND_EXT    : &'static str = "png";
 pub const THEME_COMPONENT_WINDOW  : &'static str = "window";
 pub const THEME_COMPONENT_BG      : &'static str = "background";
 pub const THEME_COMPONENT_USER    : &'static str = "user";
-pub const THEME_COMPONENT_SECRET  : &'static str = "password";
+pub const THEME_COMPONENT_SECRET  : &'static str = "secret";
 
 pub const THEME_NAME_DEFAULT      : &'static str = "default";
 

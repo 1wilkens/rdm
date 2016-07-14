@@ -2,7 +2,7 @@
 
 //TODO: Extract submacro
 
-#[cfg(feature = "debug")]
+#[cfg(debug_assertions)]
 macro_rules! log_debug(
     ($($arg:tt)*) => (
         match writeln!(&mut ::std::io::stderr(), "[DBG] {}", format!($($arg)*)) {
@@ -12,7 +12,7 @@ macro_rules! log_debug(
     )
 );
 
-#[cfg(not(feature = "debug"))]
+#[cfg(not(debug_assertions))]
 macro_rules! log_debug(
     ($($arg:tt)*) => (
         ()
