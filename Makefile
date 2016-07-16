@@ -2,10 +2,10 @@
 
 CC = cargo
 
-all: debug
+all: dbg
 
 dbg:
-	$(CC) build --features "debug"
+	$(CC) build
 
 run: dbg
 	$(shell sudo target/debug/rdm)
