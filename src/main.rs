@@ -3,6 +3,7 @@
 extern crate env_logger;
 
 extern crate dbus;
+extern crate libc;
 
 extern crate gdk;
 extern crate gdk_pixbuf;
@@ -38,6 +39,12 @@ fn main() {
 
     let mut x = server::Xserver::new();
     x.start();
+    x.stop();
+    log_debug!("main: stopped X");
+
+    let res = ::std::fs::remove_dir_all(DEFAULT_RUN_DIR);
+    log_debug!("remove runtime dir:={:?}", res);
+    return;
 
     //let mgr = manager::Manager::new();
     //mgr.start();
@@ -58,5 +65,4 @@ fn main() {
     ::gtk::main();
 
     println!("Exited gtk::main loop, cleaning up");
-    let res = ::std::fs::remove_dir(DEFAULT_RUN_DIR);
 }
