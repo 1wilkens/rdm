@@ -114,6 +114,7 @@ impl Ui {
 
 fn xinit(name: &String) {
     use ::users::os::unix::UserExt;
+    use std::os::unix::process::CommandExt;
 
     log_info!("[ui] Running 'xinit' functionality in new thread");
 
@@ -127,23 +128,18 @@ fn xinit(name: &String) {
         let dir = user.home_dir();
         let shell = user.shell().to_str()
             .expect("[ui:child] Shell was not valid unicode!");
+
         let cmd_args = format!("exec {} --login .xinitrc", shell);
-
-        // Change into home_dir
-        log_info!("[ui:child] Change into home directory");
-        env::set_current_dir(dir)
-        .expect(&format!("[ui:child] Failed to change into home directory: {:?} ", dir));
-
-        log_info!("[ui:child] cmg_args={}", cmd_args);
-        log_info!("[ui:child] Complete command '{} -c {}'", shell, cmd_args);
 
         // Load ~/.xinitrc
         log_info!("[ui:child] Load .xinitrc");
-        log_info!("[ui:child] Workdir: {:?}", ::std::env::current_dir().unwrap());
+        log_info!("[ui:child] Session command '{} -c {}'", shell, cmd_args);
         Command::new(shell)
             .arg("-c")
             .arg(&cmd_args)
             .current_dir(dir)
+            .uid(user.uid())
+            .gid(user.primary_group_id())
             .spawn()
             .unwrap_or_else(|e| panic!("[ui:child] Failed to start session: {}!", e));
     });
