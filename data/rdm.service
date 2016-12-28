@@ -4,9 +4,11 @@ Conflicts=getty@tty1.service
 After=systemd-user-sessions.service getty@tty1.service plymouth-quit.service
 
 [Service]
+Environment="G_MESSAGES_DEBUG=all"
+#Environment="GTK_DEBUG=all"
 ExecStart=/usr/local/bin/rdm
-Restart=always
-PrivateTmp=yes
+#Restart=always
+#PrivateTmp=yes
 
 [Install]
 Alias=display-manager.service
