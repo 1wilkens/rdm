@@ -39,12 +39,6 @@ fn main() {
 
     let mut x = server::Xserver::new();
     x.start();
-    x.stop();
-    log_debug!("main: stopped X");
-
-    let res = ::std::fs::remove_dir_all(DEFAULT_RUN_DIR);
-    log_debug!("remove runtime dir:={:?}", res);
-    return;
 
     //let mgr = manager::Manager::new();
     //mgr.start();
@@ -64,5 +58,11 @@ fn main() {
     // start gtk main event loop
     ::gtk::main();
 
-    println!("Exited gtk::main loop, cleaning up");
+    log_info!("[main] Exited gtk::main loop, cleaning up");
+    x.stop();
+    log_info!("[main] stopped X");
+
+    let res = ::std::fs::remove_dir_all(DEFAULT_RUN_DIR);
+    log_info!("[main] Remove runtime dir:={:?}", res);
+    return;
 }

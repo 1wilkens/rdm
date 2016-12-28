@@ -1,8 +1,10 @@
 use constants::*;
 
+use gtk::prelude::*;
+
 use gdk::{screen_width, screen_height};
 use gdk_pixbuf::Pixbuf;
-use gtk::{Builder, Entry, Image, Inhibit, Window, EntryExt, WidgetExt, WindowExt};
+use gtk::{Builder, Entry, Image, Window};
 
 use std::env;
 use std::io::Write;
@@ -34,20 +36,20 @@ impl Ui {
         let b = Builder::new_from_file(theme_file.to_str().unwrap());
 
         let w: Window = b.get_object(THEME_COMPONENT_WINDOW)
-            .expect("Failed to get main window from theme!");
+            .expect("[ui] Failed to get main window from theme!");
         let bg: Image = b.get_object(THEME_COMPONENT_BG)
-            .expect("Failed to get background image from theme!");
+            .expect("[ui] Failed to get background image from theme!");
         let user: Entry = b.get_object(THEME_COMPONENT_USER)
-            .expect("Failed to get user entry from theme!");
+            .expect("[ui] Failed to get user entry from theme!");
         let secret: Entry = b.get_object(THEME_COMPONENT_SECRET)
-            .expect("Failed to get secret entry from theme!");
+            .expect("[ui] Failed to get secret entry from theme!");
 
         // fit to screen dimensions
         let (width, heigth) = (screen_width(), screen_height());
         w.set_default_size(width, heigth);
 
         let pb = Pixbuf::new_from_file_at_scale(bg_file.to_str().unwrap(), width, heigth, false)
-            .ok().expect(&format!("Failed to get background image pixbuf: {:?}", bg_file));
+            .ok().expect(&format!("[ui] Failed to get background image pixbuf: {:?}", bg_file));
 
         bg.set_from_pixbuf(Some(&pb));
 
@@ -60,6 +62,7 @@ impl Ui {
     }
 
     pub fn setup_events(&self) {
+        log_info!("[ui] Setting up events");
         let p_entry = self.secret.clone();
 
         self.user.connect_key_release_event(move |_, e| {
@@ -72,31 +75,30 @@ impl Ui {
 
         let u_entry = self.user.clone();
         let p_entry = self.secret.clone();
+        let window = self.window.clone();
 
         self.secret.connect_key_release_event(move |_, e| {
 
             let val = (*e).get_keyval();
             if val == KEYVAL_ENTER {
-                ::gtk::main_quit();
-
                 let user = u_entry.get_text().unwrap_or(String::new());
                 let password = p_entry.get_text().unwrap_or(String::new());
 
                 let mut auth = Authenticator::new(APPLICATION_NAME)
-                    .expect("Failed to get PAM authenticator!");
+                    .expect("[ui] Failed to get PAM authenticator!");
                 auth.close_on_drop = false;  //TODO: change this in release
                 auth.set_credentials(&user, &password);
 
                 let code1 = auth.authenticate();
                 let code2 = auth.open_session();
                 if code1.is_ok() && code2.is_ok() {
-                    log_info!("Authentication successful");
-                    xinit(&user);
+                    log_info!("[ui] Authentication successful! Hiding window");
 
-                    ::gtk::main_quit();
+                    window.hide();
+                    xinit(&user);
                 }
                 else {
-                    println!("authenticate={:?}, open_session={:?}", code1, code2);
+                    log_info!("[ui] authenticate={:?}, open_session={:?}", code1, code2);
                     p_entry.set_text("");
                 }
             }
@@ -105,7 +107,7 @@ impl Ui {
     }
 
     pub fn show(&mut self) {
-        // show window
+        log_info!("[ui] Showing window");
         self.window.show_all();
     }
 }
@@ -113,36 +115,42 @@ impl Ui {
 fn xinit(name: &String) {
     use ::users::os::unix::UserExt;
 
-    log_info!("Running 'xinit' functionality in new thread");
+    log_info!("[ui] Running 'xinit' functionality in new thread");
 
     let name = name.clone();
-    thread::spawn(move || {
-        log_info!("Child thread: Executing .xinitrc");
+    let child = thread::spawn(move || {
+        log_info!("[ui:child] Executing .xinitrc");
 
         // Setup variables
         let user = ::users::get_user_by_name(&name)
-            .expect(&format!("Could not get user by name: {}", name));
+            .expect(&format!("[ui:child] Could not get user by name: {}!", name));
         let dir = user.home_dir();
-        let shell = user.shell();
-        let shell_str = shell.to_str().unwrap();
-        let cmd_args = format!("exec {} --login .xinitrc", shell_str);
-        log_info!("Child thread: cmg_args={}", cmd_args);
-        log_info!("Complete command '{} -c {}'", shell_str, cmd_args);
+        let shell = user.shell().to_str()
+            .expect("[ui:child] Shell was not valid unicode!");
+        let cmd_args = format!("exec {} --login .xinitrc", shell);
 
-        // Chnange into home_dir
-        //log_info!("Child thread: Change into home directory");
-        //env::set_current_dir(dir)
-        //    .expect(&format!("Failed to change into home directory: {:?} ", dir));
+        // Change into home_dir
+        log_info!("[ui:child] Change into home directory");
+        env::set_current_dir(dir)
+        .expect(&format!("[ui:child] Failed to change into home directory: {:?} ", dir));
+
+        log_info!("[ui:child] cmg_args={}", cmd_args);
+        log_info!("[ui:child] Complete command '{} -c {}'", shell, cmd_args);
 
         // Load ~/.xinitrc
-        log_info!("Child thread: Load ~/.xinitrc");
+        log_info!("[ui:child] Load .xinitrc");
+        log_info!("[ui:child] Workdir: {:?}", ::std::env::current_dir().unwrap());
         Command::new(shell)
             .arg("-c")
             .arg(&cmd_args)
             .current_dir(dir)
             .spawn()
-            .unwrap_or_else(|e| panic!("Failed to start session: {}", e));
+            .unwrap_or_else(|e| panic!("[ui:child] Failed to start session: {}!", e));
     });
+
+    log_info!("[ui] Spawned session & waiting for result");
+    let result = child.join();
+    log_info!("[ui] Session ended with result: {:?}", result);
 }
 
 fn get_theme_path(theme_name: &str, default: bool) -> PathBuf {
@@ -158,6 +166,6 @@ fn get_theme_path(theme_name: &str, default: bool) -> PathBuf {
         get_theme_path(THEME_NAME_DEFAULT, true)
     }
     else {
-        panic!("Could not load default configuration")
+        panic!("[ui] Could not load default configuration!")
     }
 }

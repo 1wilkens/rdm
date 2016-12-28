@@ -1,4 +1,4 @@
-.PHONY: rdm install clean
+.PHONY: install clean
 
 CC = cargo
 
@@ -13,7 +13,7 @@ run: dbg
 rdm:
 	$(CC) build --release
 
-install: rdm
+install: #rdm
 # Copy themes
 	$(shell sudo mkdir -p /usr/share/rdm/themes/default/)
 	$(shell sudo cp -f theme/background.png /usr/share/rdm/themes/default/)
