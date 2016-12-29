@@ -49,7 +49,7 @@ impl Ui {
         w.set_default_size(width, heigth);
 
         let pb = Pixbuf::new_from_file_at_scale(bg_file.to_str().unwrap(), width, heigth, false)
-            .ok().expect(&format!("[ui] Failed to get background image pixbuf: {:?}", bg_file));
+            .expect(&format!("[ui] Failed to get background image pixbuf: {:?}", bg_file));
 
         bg.set_from_pixbuf(Some(&pb));
 
@@ -95,7 +95,7 @@ impl Ui {
                     log_info!("[ui] Authentication successful! Hiding window");
 
                     window.hide();
-                    xinit(&user);
+                    start_session(&user);
                 }
                 else {
                     log_info!("[ui] authenticate={:?}, open_session={:?}", code1, code2);
@@ -112,11 +112,12 @@ impl Ui {
     }
 }
 
-fn xinit(name: &String) {
+fn start_session(name: &String) {
     use ::users::os::unix::UserExt;
+    use std::ffi::CString;
     use std::os::unix::process::CommandExt;
 
-    log_info!("[ui] Running 'xinit' functionality in new thread");
+    log_info!("[ui] Starting session in new thread");
 
     let name = name.clone();
     let child = thread::spawn(move || {
@@ -129,28 +130,49 @@ fn xinit(name: &String) {
         let shell = user.shell().to_str()
             .expect("[ui:child] Shell was not valid unicode!");
 
-        let cmd_args = format!("exec {} --login .xinitrc", shell);
+        let cmd = format!("exec {} --login .xinitrc", shell);
 
-        // Load ~/.xinitrc
-        log_info!("[ui:child] Load .xinitrc");
-        log_info!("[ui:child] Session command '{} -c {}'", shell, cmd_args);
-        Command::new(shell)
-            .arg("-c")
-            .arg(&cmd_args)
+        // Need these later in `before_exec` to setup supplimentary groups
+        let name_c = CString::new(name).unwrap();
+        let uid = user.uid();
+        let gid = user.primary_group_id();
+
+        // Start session loading .xinitrc
+        log_info!("[ui:child] Starting session");
+        log_info!("[ui:child] Session command '{}'", cmd);
+        Command::new(cmd)
             .current_dir(dir)
-            .uid(user.uid())
-            .gid(user.primary_group_id())
+            // Cannot use this as it does not add supplimentary groups
+            //.uid(user.uid())
+            .gid(gid)
+            .before_exec(move || {
+                // This sets the supplimentary groups for the session
+
+                // TODO: Change this when initgroups lands in libc
+                if unsafe { initgroups(name_c.as_ptr(), gid) } != 0 {
+                    log_err!("[ui:child] initgroups returned non-zero!");
+                    Err(::std::io::Error::last_os_error())
+                }
+                else if unsafe { ::libc::setuid(uid) } != 0 {
+                    log_err!("[ui:child] setuid returned non-zero!");
+                    Err(::std::io::Error::last_os_error())
+                }
+                else {
+                    Ok(())
+                }
+            })
             .spawn()
-            .unwrap_or_else(|e| panic!("[ui:child] Failed to start session: {}!", e));
+            .unwrap_or_else(|e| panic!("[ui:child] Failed to start session: {}!", e))
     });
 
-    log_info!("[ui] Spawned session & waiting for result");
-    let result = child.join();
-    log_info!("[ui] Session ended with result: {:?}", result);
+    log_info!("[ui] Spawned session process & waiting for result");
+    let result = child.join()
+        .unwrap_or_else(|e| panic!("[ui] Failed to join session thread: {:?}!", e))
+        .wait();
+    log_info!("[ui] Session ended with result: {:?}", result.unwrap());
 }
 
 fn get_theme_path(theme_name: &str, default: bool) -> PathBuf {
-
     let mut theme_path = PathBuf::new();
     theme_path.push(THEME_BASE_PATH);
     theme_path.push(theme_name);
@@ -164,4 +186,9 @@ fn get_theme_path(theme_name: &str, default: bool) -> PathBuf {
     else {
         panic!("[ui] Could not load default configuration!")
     }
+}
+
+// TODO: Remove when initgroups lands in libc
+extern {
+    fn initgroups(user: *const ::libc::c_char, group: ::libc::gid_t) -> ::libc::c_int;
 }
