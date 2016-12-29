@@ -2,7 +2,9 @@ language: rust
 rust:
   - nightly
 
+dist: trusty
 sudo: false
+
 addons:
   apt:
     packages:
