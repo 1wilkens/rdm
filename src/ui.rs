@@ -78,7 +78,6 @@ impl Ui {
         let window = self.window.clone();
 
         self.secret.connect_key_release_event(move |_, e| {
-
             let val = (*e).get_keyval();
             if val == KEYVAL_ENTER {
                 let user = u_entry.get_text().unwrap_or(String::new());
@@ -94,7 +93,7 @@ impl Ui {
                 if code1.is_ok() && code2.is_ok() {
                     log_info!("[ui] Authentication successful! Hiding window");
 
-                    window.hide();
+                    window.destroy();
                     start_session(&user);
                 }
                 else {
@@ -120,56 +119,57 @@ fn start_session(name: &String) {
     log_info!("[ui] Starting session in new thread");
 
     let name = name.clone();
-    let child = thread::spawn(move || {
-        log_info!("[ui:child] Executing .xinitrc");
+    log_info!("[ui:child] Executing .xinitrc");
 
-        // Setup variables
-        let user = ::users::get_user_by_name(&name)
-            .expect(&format!("[ui:child] Could not get user by name: {}!", name));
-        let dir = user.home_dir();
-        let shell = user.shell().to_str()
-            .expect("[ui:child] Shell was not valid unicode!");
+    // Setup variables
+    let user = ::users::get_user_by_name(&name)
+        .expect(&format!("[ui:child] Could not get user by name: {}!", name));
+    let dir = user.home_dir();
+    let shell = user.shell().to_str()
+        .expect("[ui:child] Shell was not valid unicode!");
 
-        let cmd = format!("exec {} --login .xinitrc", shell);
+    let args = format!("exec {} --login .xinitrc", shell);
 
-        // Need these later in `before_exec` to setup supplimentary groups
-        let name_c = CString::new(name).unwrap();
-        let uid = user.uid();
-        let gid = user.primary_group_id();
+    // Need these later in `before_exec` to setup supplimentary groups
+    let name_c = CString::new(name).unwrap();
+    let uid = user.uid();
+    let gid = user.primary_group_id();
 
-        // Start session loading .xinitrc
-        log_info!("[ui:child] Starting session");
-        log_info!("[ui:child] Session command '{}'", cmd);
-        Command::new(cmd)
-            .current_dir(dir)
-            // Cannot use this as it does not add supplimentary groups
-            //.uid(user.uid())
-            .gid(gid)
-            .before_exec(move || {
-                // This sets the supplimentary groups for the session
+    // Start session loading .xinitrc
+    log_info!("[ui:child] Starting session");
+    log_info!("[ui:child] Session command '{} -c {}'", shell, args);
+    let mut child = Command::new(shell)
+        .current_dir(dir)
+        // Cannot use this as it does not add supplimentary groups
+        //.uid(user.uid())
+        .gid(gid)
+        .before_exec(move || {
+            // This sets the supplimentary groups for the session
 
-                // TODO: Change this when initgroups lands in libc
-                if unsafe { initgroups(name_c.as_ptr(), gid) } != 0 {
-                    log_err!("[ui:child] initgroups returned non-zero!");
-                    Err(::std::io::Error::last_os_error())
-                }
-                else if unsafe { ::libc::setuid(uid) } != 0 {
-                    log_err!("[ui:child] setuid returned non-zero!");
-                    Err(::std::io::Error::last_os_error())
-                }
-                else {
-                    Ok(())
-                }
-            })
-            .spawn()
-            .unwrap_or_else(|e| panic!("[ui:child] Failed to start session: {}!", e))
-    });
+            // TODO: Change this when initgroups lands in libc
+            if unsafe { initgroups(name_c.as_ptr(), gid) } != 0 {
+                log_err!("[ui:child] initgroups returned non-zero!");
+                Err(::std::io::Error::last_os_error())
+            }
+            else if unsafe { ::libc::setuid(uid) } != 0 {
+                log_err!("[ui:child] setuid returned non-zero!");
+                Err(::std::io::Error::last_os_error())
+            }
+            else {
+                Ok(())
+            }
+        })
+        .arg("-c")
+        .arg(args)
+        .spawn()
+        .unwrap_or_else(|e| panic!("[ui:child] Failed to start session: {}!", e));
 
     log_info!("[ui] Spawned session process & waiting for result");
-    let result = child.join()
-        .unwrap_or_else(|e| panic!("[ui] Failed to join session thread: {:?}!", e))
-        .wait();
-    log_info!("[ui] Session ended with result: {:?}", result.unwrap());
+
+    //TODO: Waiting for the child causes an "invisible window" in i3.. Investigate further
+    //let result = child.wait()
+    //    .unwrap_or_else(|e| panic!("[ui] Failed to join session thread: {:?}!", e));
+    //log_info!("[ui] Session exited with return code: {}", result);
 }
 
 fn get_theme_path(theme_name: &str, default: bool) -> PathBuf {
