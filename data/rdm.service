@@ -6,9 +6,11 @@ After=systemd-user-sessions.service getty@tty1.service plymouth-quit.service
 [Service]
 #Environment="G_MESSAGES_DEBUG=all"
 #Environment="GTK_DEBUG=all"
-ExecStart=/usr/local/bin/rdm
 #Restart=always
-#PrivateTmp=yes
+PrivateTmp=yes
+ExecStart=/usr/local/bin/rdm
+RuntimeDirectory=rdm
+RuntimeDirectoryMode=0755
 
 [Install]
 Alias=display-manager.service

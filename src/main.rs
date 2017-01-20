@@ -32,11 +32,6 @@ use std::process::{Child, Command};
 fn main() {
     env_logger::init().unwrap();
 
-    match ::std::fs::create_dir(DEFAULT_RUN_DIR) {
-        Ok(_)   => {},
-        Err(e)  => panic!("Failed to create runtime dir: {}", e)
-    }
-
     let mut x = server::Xserver::new();
     x.start();
 
@@ -62,7 +57,5 @@ fn main() {
     x.stop();
     log_info!("[main] stopped X");
 
-    let res = ::std::fs::remove_dir_all(DEFAULT_RUN_DIR);
-    log_info!("[main] Remove runtime dir:={:?}", res);
     return;
 }
