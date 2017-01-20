@@ -2,9 +2,9 @@
 
 name = "rdm"
 version = "0.0.1"
-authors = ["Florian Wilkens <mrfloya_github@outlook.com>"]
+authors = ["Florian Wilkens <gh@1wilkens.org>"]
 description = "Simple Display Manager inspired by SLiM"
-repository = "https://github.com/mrfloya/rdm"
+repository = "https://github.com/1wilkens/rdm"
 readme = "README.md"
 license = "MIT"
 
