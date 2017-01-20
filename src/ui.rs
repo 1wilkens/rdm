@@ -147,7 +147,7 @@ fn start_session(name: &String) {
             // This sets the supplimentary groups for the session
 
             // TODO: Change this when initgroups lands in libc
-            if unsafe { initgroups(name_c.as_ptr(), gid) } != 0 {
+            if unsafe { ::libc::initgroups(name_c.as_ptr(), gid) } != 0 {
                 log_err!("[ui:child] initgroups returned non-zero!");
                 Err(::std::io::Error::last_os_error())
             }
@@ -186,9 +186,4 @@ fn get_theme_path(theme_name: &str, default: bool) -> PathBuf {
     else {
         panic!("[ui] Could not load default configuration!")
     }
-}
-
-// TODO: Remove when initgroups lands in libc
-extern {
-    fn initgroups(user: *const ::libc::c_char, group: ::libc::gid_t) -> ::libc::c_int;
 }
