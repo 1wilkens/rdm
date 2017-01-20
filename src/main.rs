@@ -20,8 +20,8 @@ mod log;
 
 mod constants;
 mod manager;
-mod ui;
 mod server;
+mod ui;
 
 use constants::*;
 use ui::*;

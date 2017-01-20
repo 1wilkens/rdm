@@ -1,12 +1,16 @@
-use constants::*;
-
-use libc::{close, pipe};
-
 use std::env;
 use std::fs;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
+use std::thread;
+use std::time::Duration;
+
+use libc::{close, pipe};
+use rand::Rng;
+use uuid::Uuid;
+
+use constants::*;
 
 // TODO: This should really be simpler I think
 const HEX_CHARS : [char; 15]
@@ -33,11 +37,10 @@ impl Xserver {
     }
 
     pub fn start(&mut self) {
-        log_info!("[Xserver]: start()");
+        log_info!("[X]: start()");
 
         if TESTING {
-            // In TEST mode we don't start X
-            // TODO: Start Xephyr here?
+            // In TESTING mode we don't start X
             return;
         }
         if self.process.is_some() {
@@ -53,18 +56,18 @@ impl Xserver {
     }
 
     pub fn stop(&mut self) {
-        log_info!("[Xserver]: stop()");
+        log_info!("[X]: stop()");
 
         // TODO: There is probably more to do here
         // Kill X process
         if let Some(ref mut p) = self.process {
-            log_info!("Killing X with PID={}", p.id());
-            let res = p.kill();
-            log_info!("Killed X. Result={:?}", res);
-            if res.is_err() {
-                log_info!("Failed to kill X: {}", res.err().unwrap());
-            }
-            p.wait().expect("[Xserver] Failed to wait for stopped X server!");
+            log_info!("[X]: Killing X with PID={}", p.id());
+            match p.kill() {
+                Ok(res)     => log_info!("[X]: Killed X with Result={:?}", res),
+                Err(err)    => log_err!("[X]: Failed to kill X: {}", err)
+            };
+
+            p.wait().expect("[X]: Failed to wait for stopped X server!");
         }
         self.process = None;
         // Delete generated auth file
@@ -79,11 +82,11 @@ impl Xserver {
     }
 
     fn set_cookie(&self) {
-        log_info!("[Xserver]: Setting auth cookie");
+        log_info!("[X]: Setting auth cookie");
 
         let auth_file = match self.auth_file {
             Some(ref f) => f,
-            None        => panic!("[Xserver] Cannot set X auth cookie without an auth file!")
+            None        => panic!("[X]: Cannot set X auth cookie without an auth file!")
         };
         let mut auth = Command::new(XAUTH_EXECUTABLE)
             .arg("-f")
@@ -91,20 +94,19 @@ impl Xserver {
             .arg("-q")
             .stdin(Stdio::piped())
             .spawn()
-            .expect("[Xserver] Failed to spawn xauth process!");
+            .expect("[X]: Failed to spawn xauth process!");
 
         if let Some(ref mut pipe) = auth.stdin {
             pipe.write_all(b"remove :0\n").unwrap();
             pipe.write_all(format!("add :0 . {}\n", self.auth_cookie).as_bytes()).unwrap();
             pipe.write_all(b"exit\n").unwrap();
-            // TODO: Maybe we don't need this
-            pipe.flush().expect("[Xserver] Failed to flush xauth pipe!");
+            pipe.flush().expect("[X]: Failed to flush xauth pipe!");
         }
 
         // Wait on xauth to prevent zombie processes
-        auth.wait().unwrap();
+        auth.wait().expect("[X]: Failed to wait on xauth process!");
 
-        log_info!("[Xserver]: Auth cookie set");
+        log_info!("[X]: Auth cookie set");
     }
 
     fn start_x_process(&mut self) {
@@ -113,12 +115,12 @@ impl Xserver {
         // Create pipes to read DISPLAY from X
         let mut fds = [0i32, 0i32];
         if unsafe { pipe(fds.as_mut_ptr()) != 0 } {
-            panic!("[Xserver] Failed to open pipes to start X!");
+            panic!("[X]: Failed to open pipes to start X!");
         }
 
         let auth_file = match self.auth_file {
             Some(ref f) => f,
-            None        => panic!("[Xserver] Cannot start X without an auth file!")
+            None        => panic!("[X]: Cannot start X without an auth file!")
         };
         // Start X and set the field
         let child = Command::new(X_EXECUTABLE)
@@ -129,14 +131,13 @@ impl Xserver {
             //.arg(X_ARG_AUTH)
             //.arg(auth_file)
             .spawn()
-            .unwrap_or_else(|e| panic!("[Xserver] Failed to start X: {}!", e));
-        log_info!("self.process.id={}", child.id());
+            .unwrap_or_else(|e| panic!("[X]: Failed to start X: {}!", e));
         self.process = Some(child);
 
         // Wait 2 seconds for X to start
-        log_info!("[Xserver]: Started X.. Sleeping 2 seconds");
-        ::std::thread::sleep(::std::time::Duration::from_millis(2000));
-        log_info!("[Xserver]: Sleep finished");
+        log_info!("[X]: Started X.. Sleeping 2 seconds");
+        thread::sleep(Duration::from_millis(2000));
+        log_info!("[X]: Sleep finished");
 
         // Close writing end of the pipe
         unsafe { close(fds[1]) };
@@ -145,7 +146,7 @@ impl Xserver {
         let mut pipe = unsafe { fs::File::from_raw_fd(fds[0]) };
         let mut display = String::new();
         pipe.read_to_string(&mut display)
-            .expect("[Xserver] Failed to read DISPLAY from X!");
+            .expect("[X]: Failed to read DISPLAY from X!");
         // TODO: This allocates twice but we mostly deal with "0" so it shouldn't be a problem
         let display = format!(":{}", display.trim_right());
         env::set_var("DISPLAY", &display);
@@ -167,35 +168,34 @@ impl Drop for Xserver {
 
 // Generate an authorization cookie
 fn generate_cookie() -> String {
-    log_info!("[Xserver]: Generating auth cookie");
-    use rand::Rng;
+    log_info!("[X]: Generating auth cookie");
 
     // TODO: replace this with another uuid?
     let mut cookie = String::with_capacity(32);
     let mut rng = ::rand::StdRng::new()
-        .expect("[Xserver] Failed to get rng for cookie generation!");
+        .expect("[X]: Failed to get rng for cookie generation!");
 
     while cookie.len() < 32 {
         cookie.push(*rng.choose(&HEX_CHARS).unwrap());
     }
 
-    log_info!("[Xserver]: Generated cookie: {}", &cookie);
+    log_info!("[X]: Generated cookie: {}", &cookie);
     cookie
 }
 
 // Generate an auth file based on the run dir and a new uuid and touch it
 fn touch_auth_file() -> String {
-    log_info!("[Xserver]: Generating auth path");
+    log_info!("[X]: Generating auth path");
 
-    let uuid = ::uuid::Uuid::new_v4();
+    let uuid = Uuid::new_v4();
     let mut path = PathBuf::from(DEFAULT_RUN_DIR);
     path.push(uuid.hyphenated().to_string());
 
     match fs::OpenOptions::new().write(true).create_new(true).open(&path) {
         Ok(_)   => {},
-        Err(e)  => panic!("[Xserver] Failed to touch X auth file: {}!", e)
+        Err(e)  => panic!("[X]: Failed to touch X auth file: {}!", e)
     }
 
-    log_info!("[Xserver]: Generated auth path: {:?}", &path);
+    log_info!("[X]: Generated auth path: {:?}", &path);
     path.to_string_lossy().into_owned()
 }

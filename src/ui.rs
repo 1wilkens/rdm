@@ -1,18 +1,18 @@
-use constants::*;
-
-use gtk::prelude::*;
-
-use gdk::{screen_width, screen_height};
-use gdk_pixbuf::Pixbuf;
-use gtk::{Builder, Entry, Image, Window};
-
 use std::env;
-use std::io::Write;
+use std::ffi::CString;
+use std::io::{Error, Write};
 use std::path::PathBuf;
 use std::process::Command;
 use std::thread;
 
+use gtk::prelude::*;
+use gdk::{screen_width, screen_height};
+use gdk_pixbuf::Pixbuf;
+use gtk::{Builder, Entry, Image, Window};
+use libc::{initgroups, setuid};
 use pam_auth::Authenticator;
+
+use constants::*;
 
 pub struct Ui {
     pub window:     Window,
@@ -113,20 +113,18 @@ impl Ui {
 
 fn start_session(name: &String) {
     use ::users::os::unix::UserExt;
-    use std::ffi::CString;
     use std::os::unix::process::CommandExt;
 
     log_info!("[ui] Starting session in new thread");
 
     let name = name.clone();
-    log_info!("[ui:child] Executing .xinitrc");
 
     // Setup variables
     let user = ::users::get_user_by_name(&name)
-        .expect(&format!("[ui:child] Could not get user by name: {}!", name));
+        .expect(&format!("[ui] Could not get user by name: {}!", name));
     let dir = user.home_dir();
     let shell = user.shell().to_str()
-        .expect("[ui:child] Shell was not valid unicode!");
+        .expect("[ui] Shell was not valid unicode!");
 
     let args = format!("exec {} --login .xinitrc", shell);
 
@@ -136,8 +134,8 @@ fn start_session(name: &String) {
     let gid = user.primary_group_id();
 
     // Start session loading .xinitrc
-    log_info!("[ui:child] Starting session");
-    log_info!("[ui:child] Session command '{} -c {}'", shell, args);
+    log_info!("[ui] Starting session");
+    log_info!("[ui] Session command '{} -c {}'", shell, args);
     let mut child = Command::new(shell)
         .current_dir(dir)
         // Cannot use this as it does not add supplimentary groups
@@ -145,15 +143,13 @@ fn start_session(name: &String) {
         .gid(gid)
         .before_exec(move || {
             // This sets the supplimentary groups for the session
-
-            // TODO: Change this when initgroups lands in libc
-            if unsafe { ::libc::initgroups(name_c.as_ptr(), gid) } != 0 {
-                log_err!("[ui:child] initgroups returned non-zero!");
-                Err(::std::io::Error::last_os_error())
+            if unsafe { initgroups(name_c.as_ptr(), gid) } != 0 {
+                log_err!("[ui:session] initgroups returned non-zero!");
+                Err(Error::last_os_error())
             }
-            else if unsafe { ::libc::setuid(uid) } != 0 {
-                log_err!("[ui:child] setuid returned non-zero!");
-                Err(::std::io::Error::last_os_error())
+            else if unsafe { setuid(uid) } != 0 {
+                log_err!("[ui:session] setuid returned non-zero!");
+                Err(Error::last_os_error())
             }
             else {
                 Ok(())
@@ -162,7 +158,7 @@ fn start_session(name: &String) {
         .arg("-c")
         .arg(args)
         .spawn()
-        .unwrap_or_else(|e| panic!("[ui:child] Failed to start session: {}!", e));
+        .unwrap_or_else(|e| panic!("[ui] Failed to start session: {}!", e));
 
     log_info!("[ui] Spawned session process & waiting for result");
 

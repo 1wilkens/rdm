@@ -1,7 +1,7 @@
+use std::io::Write;
+
 use dbus::{BusType, Connection, ConnectionItem, Error, Message, MessageItem, NameFlag};
 use dbus::obj::{Argument, Interface, Method, ObjectPath, Property};
-
-use std::io::Write;
 
 use constants::*;
 
