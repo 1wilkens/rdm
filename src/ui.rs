@@ -15,10 +15,10 @@ use pam_auth::Authenticator;
 use constants::*;
 
 pub struct Ui {
-    pub window:     Window,
+    pub window: Window,
     pub background: Image,
-    pub user:       Entry,
-    pub secret:     Entry
+    pub user: Entry,
+    pub secret: Entry,
 }
 
 impl Ui {
@@ -54,10 +54,10 @@ impl Ui {
         bg.set_from_pixbuf(Some(&pb));
 
         Ui {
-            window:     w,
+            window: w,
             background: bg,
-            user:       user,
-            secret:     secret
+            user: user,
+            secret: secret,
         }
     }
 
@@ -85,7 +85,7 @@ impl Ui {
 
                 let mut auth = Authenticator::new(APPLICATION_NAME)
                     .expect("[ui] Failed to get PAM authenticator!");
-                auth.close_on_drop = false;  //TODO: change this in release
+                auth.close_on_drop = false; //TODO: change this in release
                 auth.set_credentials(&user, &password);
 
                 let code1 = auth.authenticate();
@@ -95,8 +95,7 @@ impl Ui {
 
                     window.destroy();
                     start_session(&user);
-                }
-                else {
+                } else {
                     log_info!("[ui] authenticate={:?}, open_session={:?}", code1, code2);
                     p_entry.set_text("");
                 }
@@ -112,7 +111,7 @@ impl Ui {
 }
 
 fn start_session(name: &String) {
-    use ::users::os::unix::UserExt;
+    use users::os::unix::UserExt;
     use std::os::unix::process::CommandExt;
 
     log_info!("[ui] Starting session in new thread");
@@ -123,7 +122,8 @@ fn start_session(name: &String) {
     let user = ::users::get_user_by_name(&name)
         .expect(&format!("[ui] Could not get user by name: {}!", name));
     let dir = user.home_dir();
-    let shell = user.shell().to_str()
+    let shell = user.shell()
+        .to_str()
         .expect("[ui] Shell was not valid unicode!");
 
     let args = format!("exec {} --login .xinitrc", shell);
@@ -175,11 +175,9 @@ fn get_theme_path(theme_name: &str, default: bool) -> PathBuf {
 
     if theme_path.is_dir() {
         theme_path
-    }
-    else if !default {
+    } else if !default {
         get_theme_path(THEME_NAME_DEFAULT, true)
-    }
-    else {
+    } else {
         panic!("[ui] Could not load default configuration!")
     }
 }

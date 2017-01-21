@@ -13,14 +13,14 @@ use uuid::Uuid;
 use constants::*;
 
 // TODO: This should really be simpler I think
-const HEX_CHARS : [char; 15]
-    = ['0','1','2','3','4','5','6','7','8','9','a','b','c','e','f'];
+const HEX_CHARS: [char; 16] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c',
+                               'd', 'e', 'f'];
 
 pub struct Xserver {
     auth_cookie: String,
-    auth_file:   Option<String>,
-    process:     Option<Child>,
-    display:     Option<String>
+    auth_file: Option<String>,
+    process: Option<Child>,
+    display: Option<String>,
 }
 
 impl Xserver {
@@ -32,7 +32,7 @@ impl Xserver {
             auth_cookie: cookie,
             auth_file: Some(file),
             process: None,
-            display: None
+            display: None,
         }
     }
 
@@ -63,8 +63,8 @@ impl Xserver {
         if let Some(ref mut p) = self.process {
             log_info!("[X]: Killing X with PID={}", p.id());
             match p.kill() {
-                Ok(res)     => log_info!("[X]: Killed X with Result={:?}", res),
-                Err(err)    => log_err!("[X]: Failed to kill X: {}", err)
+                Ok(res) => log_info!("[X]: Killed X with Result={:?}", res),
+                Err(err) => log_err!("[X]: Failed to kill X: {}", err),
             };
 
             p.wait().expect("[X]: Failed to wait for stopped X server!");
@@ -72,10 +72,12 @@ impl Xserver {
         self.process = None;
         // Delete generated auth file
         match self.auth_file {
-            None    => {},
-            Some(ref f) => match fs::remove_file(&f) {
-                Ok(_)   => {},
-                Err(e)  => log_info!("Failed to delete x auth file: {}", e)
+            None => {}
+            Some(ref f) => {
+                match fs::remove_file(&f) {
+                    Ok(_) => {}
+                    Err(e) => log_info!("Failed to delete x auth file: {}", e),
+                }
             }
         }
         self.auth_file = None;
@@ -86,7 +88,7 @@ impl Xserver {
 
         let auth_file = match self.auth_file {
             Some(ref f) => f,
-            None        => panic!("[X]: Cannot set X auth cookie without an auth file!")
+            None => panic!("[X]: Cannot set X auth cookie without an auth file!"),
         };
         let mut auth = Command::new(XAUTH_EXECUTABLE)
             .arg("-f")
@@ -120,7 +122,7 @@ impl Xserver {
 
         let auth_file = match self.auth_file {
             Some(ref f) => f,
-            None        => panic!("[X]: Cannot start X without an auth file!")
+            None => panic!("[X]: Cannot start X without an auth file!"),
         };
         // Start X and set the field
         let child = Command::new(X_EXECUTABLE)
@@ -172,8 +174,7 @@ fn generate_cookie() -> String {
 
     // TODO: replace this with another uuid?
     let mut cookie = String::with_capacity(32);
-    let mut rng = ::rand::StdRng::new()
-        .expect("[X]: Failed to get rng for cookie generation!");
+    let mut rng = ::rand::StdRng::new().expect("[X]: Failed to get rng for cookie generation!");
 
     while cookie.len() < 32 {
         cookie.push(*rng.choose(&HEX_CHARS).unwrap());
@@ -192,8 +193,8 @@ fn touch_auth_file() -> String {
     path.push(uuid.hyphenated().to_string());
 
     match fs::OpenOptions::new().write(true).create_new(true).open(&path) {
-        Ok(_)   => {},
-        Err(e)  => panic!("[X]: Failed to touch X auth file: {}!", e)
+        Ok(_) => {}
+        Err(e) => panic!("[X]: Failed to touch X auth file: {}!", e),
     }
 
     log_info!("[X]: Generated auth path: {:?}", &path);

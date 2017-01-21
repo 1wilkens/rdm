@@ -1,7 +1,5 @@
 /// Some useful macros for logging
-
 //TODO: Extract submacro
-
 #[cfg(debug_assertions)]
 macro_rules! log_debug(
     ($($arg:tt)*) => (
