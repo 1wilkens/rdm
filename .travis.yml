@@ -1,4 +1,5 @@
 language: rust
+cache: cargo
 rust:
   - nightly
 
@@ -13,7 +14,7 @@ addons:
       - libdbus-1-dev
 
 script:
-  - cargo build --release --verbose
+  - cargo build --verbose
   - cargo test --verbose
 
 notifications:
