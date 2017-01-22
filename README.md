@@ -1,19 +1,28 @@
 # rdm [![Build Status](https://travis-ci.org/1wilkens/rdm.svg)](https://travis-ci.org/1wilkens/rdm)
-A toy display manager written in Rust. Inspired by Slim it aims to provide a simple and elegant login screen.
+A display manager written in Rust. Inspired by Slim it aims to provide a simple and elegant login screen.
 
 THIS IS A WIP AND HAS MAJOR ISSUES RELATED TO SECURITY!! USE AT YOUR OWN RISK!
 
 ## Current Problems/Questions
 - X authorization
-    - xauth cookie is generated but not copied to `~/.Xauthority`
-    - -> Investigate further
+    - xauth cookie is generated but 
+        - not copied to `~/.Xauthority`
+        - `XAUTHORITY` environment variable is not set
+    - -> Investigate "best practices" and fix!
 - Session setup / PAM usage
     - Session setup works(tm) but I am still not sure whether all "best practices" are followed
-    - -> Review and validate `pam-sys`/`pam-auth` crates
+        - -> Review and validate `pam-sys`/`pam-auth` crates
+    - `reboot`/`poweroff` etc. fail with 
+        `Failed to power off system via logind: Interactive authentication required.`
+        - -> Investigate whether this has something to do with systemd
 - `systemd-logind` support
     - Investigate what this actually means
         - Do we need to link against `libsystemd.so` and call APIs from there?
     - Implement or mark it as done
+- Log output of session processes
+    - Currently `stderr` from all session processes is logged in systemd's journal with `rdm` as the application
+    - Is this related to forking and inheriting I/O handles?
+    - -> Investigate and fix!
 - `dbus` support
     - Is this required (maybe for systemd integration)?
     - If so what methods do we need to support?
