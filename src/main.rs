@@ -1,4 +1,5 @@
 #![allow(unused_imports, dead_code)]
+#![allow(useless_format)]
 
 extern crate env_logger;
 

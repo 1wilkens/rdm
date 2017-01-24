@@ -3,7 +3,7 @@
 #[cfg(debug_assertions)]
 macro_rules! log_debug(
     ($($arg:tt)*) => (
-        match writeln!(&mut ::std::io::stderr(), "[DBG] {}", format!($($arg)*)) {
+        match writeln!(&mut ::std::io::stderr(), "[DBG] {}", $($arg)*) {
             Ok(_) => {},
             Err(x) => panic!("Unable to write to stderr: {}", x),
         }

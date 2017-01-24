@@ -22,6 +22,6 @@ gdk-pixbuf = "0.1.1"
 gtk = { version = "0.1.1", features = [ "v3_10" ] }
 
 dbus = "0.3.4"
-pam-auth = "0.4.0"
+pam-auth = "0.4.1"
 libc = "0.2.20"
 users = "0.5.2"

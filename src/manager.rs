@@ -39,8 +39,7 @@ impl Manager {
 
         log_info!("Manager: Starting main loop!");
         for n in conn.iter(1) {
-            match n {
-                ConnectionItem::MethodCall(mut m) => {
+            if let ConnectionItem::MethodCall(mut m) = n {
                     if root_path.handle_message(&mut m).is_none() {
                         conn.send(Message::new_error(&m,
                                                      "org.freedesktop.DBus.Error.Failed",
@@ -51,10 +50,8 @@ impl Manager {
                     } else {
                         log_info!("Handled method call!");
                     }
-                }
-                _ => {}
+                };
             }
-        }
         log_info!("Manager: Quit main loop. Exiting..");
     }
 }

@@ -1,4 +1,4 @@
-.PHONY: install clean
+.PHONY: install clean check clippy
 
 CC = cargo
 
@@ -6,6 +6,12 @@ all: dbg
 
 dbg:
 	$(CC) build
+
+check:
+	$(CC) check
+
+clippy:
+	$(CC) clippy
 
 run: dbg
 	$(shell sudo target/debug/rdm)
