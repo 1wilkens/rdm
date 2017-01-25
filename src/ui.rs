@@ -134,7 +134,8 @@ fn start_session(name: &str) {
     // Start session loading .xinitrc
     log_info!("[ui]: Starting session");
     log_info!("[ui]: Session command '{} -c {}'", shell, args);
-    /*let mut child = */Command::new(shell)
+    /*let mut child = */
+    Command::new(shell)
         .current_dir(dir)
         // Cannot use this as it does not add supplimentary groups
         //.uid(user.uid())
