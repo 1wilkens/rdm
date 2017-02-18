@@ -36,6 +36,7 @@ fn main() {
     let mut x = server::Xserver::new();
     x.start();
 
+    ::std::env::set_var("XDG_SESSION_CLASS", "user");
     //let mgr = manager::Manager::new();
     //mgr.start();
 

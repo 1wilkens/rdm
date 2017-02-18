@@ -1,8 +1,9 @@
 use std::env;
 use std::ffi::CString;
+use std::fs::File;
 use std::io::{Error, Write};
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::thread;
 
 use gtk::prelude::*;
@@ -112,6 +113,8 @@ impl Ui {
 
 fn start_session(name: &str) {
     use users::os::unix::UserExt;
+    use std::os::unix::io::AsRawFd;
+    use std::os::unix::io::FromRawFd;
     use std::os::unix::process::CommandExt;
 
     log_info!("[ui]: Starting session");
@@ -131,12 +134,33 @@ fn start_session(name: &str) {
     let uid = user.uid();
     let gid = user.primary_group_id();
 
+    // Open session log file for stderr
+    //
+    // Currently we mirror sddm's behaviour which discards session's stdout
+    // and redirects stderr to a log file in the home directory
+    let stderr = File::create(format!("{}/{}", dir.to_str().unwrap(), DEFAULT_SESSION_LOG_FILE))
+        .map(|f| {
+            log_info!("[ui]: Redirecting session's stderr to {:?}", f);
+            unsafe { Stdio::from_raw_fd(f.as_raw_fd()) }
+        })
+        .unwrap_or_else(|_| {
+            log_info!("[ui]: Failed to create session log file, falling back to inherit..");
+            Stdio::inherit()
+        });
+
     // Start session loading .xinitrc
     log_info!("[ui]: Starting session");
     log_info!("[ui]: Session command '{} -c {}'", shell, args);
     /*let mut child = */
     Command::new(shell)
+        // Arguments
+        .arg("-c")
+        .arg(args)
+        // Process setup
         .current_dir(dir)
+        // TODO: Figure out why these are set / how to properly handle them
+        .env_remove("INVOCATION_ID")
+        .env_remove("JOURNAL_STREAM")
         // Cannot use this as it does not add supplimentary groups
         //.uid(user.uid())
         .gid(gid)
@@ -154,8 +178,9 @@ fn start_session(name: &str) {
                 Ok(())
             }
         })
-        .arg("-c")
-        .arg(args)
+        // Output redirection
+        .stdout(Stdio::null())
+        .stderr(stderr)
         .spawn()
         .unwrap_or_else(|e| panic!("[ui]: Failed to start session: {}!", e));
 

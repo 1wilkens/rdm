@@ -8,6 +8,7 @@ pub const DBUS_ROOT_PATH: &'static str = "com/github/1wilkens/RDM";
 /* -- CONFIG SETTINGS -- */
 pub const DEFAULT_CONFIG_FILE: &'static str = "/etc/rdm.conf";
 pub const DEFAULT_RUN_DIR: &'static str = "/var/run/rdm";
+pub const DEFAULT_SESSION_LOG_FILE: &'static str = "session.log";
 
 // Change this to prevent automatic X server start e.g.
 pub const TESTING: bool = false;

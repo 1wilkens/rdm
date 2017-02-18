@@ -126,19 +126,23 @@ impl Xserver {
         };
         // Start X and set the field
         let child = Command::new(X_EXECUTABLE)
+            // Arguments
             .args(&X_DEFAULT_ARGS)
             .arg(X_ARG_DISPLAY_FD)
             .arg(&fds[1].to_string())
             .arg(X_DEFAULT_VT)
             //.arg(X_ARG_AUTH)
             //.arg(auth_file)
+            // Output redirection
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .spawn()
             .unwrap_or_else(|e| panic!("[X]: Failed to start X: {}!", e));
         self.process = Some(child);
 
-        // Wait 2 seconds for X to start
-        log_info!("[X]: Started X.. Sleeping 2 seconds");
-        thread::sleep(Duration::from_millis(2000));
+        // Wait 1 second for X to start
+        log_info!("[X]: Started X.. Sleeping 1 second");
+        thread::sleep(Duration::from_millis(1000));
         log_info!("[X]: Sleep finished");
 
         // Close writing end of the pipe
@@ -152,7 +156,7 @@ impl Xserver {
         // TODO: This allocates twice but we mostly deal with "0" so it shouldn't be a problem
         let display = format!(":{}", display.trim_right());
         env::set_var("DISPLAY", &display);
-        log_info!("Got DISPLAY from X and set the env var: {}", &display);
+        log_debug!("[ui]: Got DISPLAY from X and set the env var: {}", &display);
         self.display = Some(display);
 
         // Close reading pipe // TODO: Is this necessary? Investigate
@@ -180,7 +184,7 @@ fn generate_cookie() -> String {
         cookie.push(*rng.choose(&HEX_CHARS).unwrap());
     }
 
-    log_info!("[X]: Generated cookie: {}", &cookie);
+    log_debug!("[X]: Generated cookie: {}", &cookie);
     cookie
 }
 
@@ -197,6 +201,6 @@ fn touch_auth_file() -> String {
         Err(e) => panic!("[X]: Failed to touch X auth file: {}!", e),
     }
 
-    log_info!("[X]: Generated auth path: {:?}", &path);
+    log_debug!("[X]: Generated auth path: {:?}", &path);
     path.to_string_lossy().into_owned()
 }
