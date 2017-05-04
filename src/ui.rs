@@ -63,7 +63,7 @@ impl Ui {
     }
 
     pub fn setup_events(&self) {
-        log_info!("[ui]: Setting up events");
+        info!("[ui]: Setting up events");
         let p_entry = self.secret.clone();
 
         self.user.connect_key_release_event(move |_, e| {
@@ -92,12 +92,12 @@ impl Ui {
                 let code1 = auth.authenticate();
                 let code2 = auth.open_session();
                 if code1.is_ok() && code2.is_ok() {
-                    log_info!("[ui]: Authentication successful! Hiding window");
+                    info!("[ui]: Authentication successful! Hiding window");
 
                     window.destroy();
                     start_session(&user);
                 } else {
-                    log_info!("[ui]: authenticate={:?}, open_session={:?}", code1, code2);
+                    info!("[ui]: authenticate={:?}, open_session={:?}", code1, code2);
                     p_entry.set_text("");
                 }
             }
@@ -106,7 +106,7 @@ impl Ui {
     }
 
     pub fn show(&mut self) {
-        log_info!("[ui]: Showing window");
+        info!("[ui]: Showing window");
         self.window.show_all();
     }
 }
@@ -117,7 +117,7 @@ fn start_session(name: &str) {
     use std::os::unix::io::FromRawFd;
     use std::os::unix::process::CommandExt;
 
-    log_info!("[ui]: Starting session");
+    info!("[ui]: Starting session");
 
     // Setup variables
     let user = ::users::get_user_by_name(name)
@@ -140,17 +140,17 @@ fn start_session(name: &str) {
     // and redirects stderr to a log file in the home directory
     let stderr = File::create(format!("{}/{}", dir.to_str().unwrap(), DEFAULT_SESSION_LOG_FILE))
         .map(|f| {
-            log_info!("[ui]: Redirecting session's stderr to {:?}", f);
+            info!("[ui]: Redirecting session's stderr to {:?}", f);
             unsafe { Stdio::from_raw_fd(f.as_raw_fd()) }
         })
         .unwrap_or_else(|_| {
-            log_info!("[ui]: Failed to create session log file, falling back to inherit..");
+            info!("[ui]: Failed to create session log file, falling back to inherit..");
             Stdio::inherit()
         });
 
     // Start session loading .xinitrc
-    log_info!("[ui]: Starting session");
-    log_info!("[ui]: Session command '{} -c {}'", shell, args);
+    info!("[ui]: Starting session");
+    info!("[ui]: Session command '{} -c {}'", shell, args);
     /*let mut child = */
     Command::new(shell)
         // Arguments
@@ -167,11 +167,11 @@ fn start_session(name: &str) {
         .before_exec(move || {
             // This sets the supplimentary groups for the session
             if unsafe { initgroups(name_c.as_ptr(), gid) } != 0 {
-                log_err!("[ui:session] initgroups returned non-zero!");
+                error!("[ui:session] initgroups returned non-zero!");
                 Err(Error::last_os_error())
             }
             else if unsafe { setuid(uid) } != 0 {
-                log_err!("[ui:session] setuid returned non-zero!");
+                error!("[ui:session] setuid returned non-zero!");
                 Err(Error::last_os_error())
             }
             else {
@@ -184,12 +184,12 @@ fn start_session(name: &str) {
         .spawn()
         .unwrap_or_else(|e| panic!("[ui]: Failed to start session: {}!", e));
 
-    log_info!("[ui]: Spawned session process & waiting for result");
+    info!("[ui]: Spawned session process & waiting for result");
 
     //TODO: Waiting for the child causes an "invisible window" in i3.. Investigate further
     //let result = child.wait()
     //    .unwrap_or_else(|e| panic!("[ui]: Failed to join session thread: {:?}!", e));
-    //log_info!("[ui]: Session exited with return code: {}", result);
+    //info!("[ui]: Session exited with return code: {}", result);
 }
 
 fn get_theme_path(theme_name: &str, default: bool) -> PathBuf {

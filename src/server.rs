@@ -37,7 +37,7 @@ impl Xserver {
     }
 
     pub fn start(&mut self) {
-        log_info!("[X]: start()");
+        info!("[X]: start()");
 
         if TESTING {
             // In TESTING mode we don't start X
@@ -56,15 +56,15 @@ impl Xserver {
     }
 
     pub fn stop(&mut self) {
-        log_info!("[X]: stop()");
+        info!("[X]: stop()");
 
         // TODO: There is probably more to do here
         // Kill X process
         if let Some(ref mut p) = self.process {
-            log_info!("[X]: Killing X with PID={}", p.id());
+            info!("[X]: Killing X with PID={}", p.id());
             match p.kill() {
-                Ok(res) => log_info!("[X]: Killed X with Result={:?}", res),
-                Err(err) => log_err!("[X]: Failed to kill X: {}", err),
+                Ok(res) => info!("[X]: Killed X with Result={:?}", res),
+                Err(err) => error!("[X]: Failed to kill X: {}", err),
             };
 
             p.wait().expect("[X]: Failed to wait for stopped X server!");
@@ -76,7 +76,7 @@ impl Xserver {
             Some(ref f) => {
                 match fs::remove_file(&f) {
                     Ok(_) => {}
-                    Err(e) => log_info!("Failed to delete x auth file: {}", e),
+                    Err(e) => info!("Failed to delete x auth file: {}", e),
                 }
             }
         }
@@ -84,7 +84,7 @@ impl Xserver {
     }
 
     fn set_cookie(&self) {
-        log_info!("[X]: Setting auth cookie");
+        info!("[X]: Setting auth cookie");
 
         let auth_file = match self.auth_file {
             Some(ref f) => f,
@@ -108,7 +108,7 @@ impl Xserver {
         // Wait on xauth to prevent zombie processes
         auth.wait().expect("[X]: Failed to wait on xauth process!");
 
-        log_info!("[X]: Auth cookie set");
+        info!("[X]: Auth cookie set");
     }
 
     fn start_x_process(&mut self) {
@@ -141,9 +141,9 @@ impl Xserver {
         self.process = Some(child);
 
         // Wait 1 second for X to start
-        log_info!("[X]: Started X.. Sleeping 1 second");
+        info!("[X]: Started X.. Sleeping 1 second");
         thread::sleep(Duration::from_millis(1000));
-        log_info!("[X]: Sleep finished");
+        info!("[X]: Sleep finished");
 
         // Close writing end of the pipe
         unsafe { close(fds[1]) };
@@ -156,7 +156,7 @@ impl Xserver {
         // TODO: This allocates twice but we mostly deal with "0" so it shouldn't be a problem
         let display = format!(":{}", display.trim_right());
         env::set_var("DISPLAY", &display);
-        log_debug!("[ui]: Got DISPLAY from X and set the env var: {}", &display);
+        debug!("[ui]: Got DISPLAY from X and set the env var: {}", &display);
         self.display = Some(display);
 
         // Close reading pipe // TODO: Is this necessary? Investigate
@@ -174,7 +174,7 @@ impl Drop for Xserver {
 
 // Generate an authorization cookie
 fn generate_cookie() -> String {
-    log_info!("[X]: Generating auth cookie");
+    info!("[X]: Generating auth cookie");
 
     // TODO: replace this with another uuid?
     let mut cookie = String::with_capacity(32);
@@ -184,13 +184,13 @@ fn generate_cookie() -> String {
         cookie.push(*rng.choose(&HEX_CHARS).unwrap());
     }
 
-    log_debug!("[X]: Generated cookie: {}", &cookie);
+    debug!("[X]: Generated cookie: {}", &cookie);
     cookie
 }
 
 // Generate an auth file based on the run dir and a new uuid and touch it
 fn touch_auth_file() -> String {
-    log_info!("[X]: Generating auth path");
+    info!("[X]: Generating auth path");
 
     let uuid = Uuid::new_v4();
     let mut path = PathBuf::from(DEFAULT_RUN_DIR);
@@ -201,6 +201,6 @@ fn touch_auth_file() -> String {
         Err(e) => panic!("[X]: Failed to touch X auth file: {}!", e),
     }
 
-    log_debug!("[X]: Generated auth path: {:?}", &path);
+    debug!("[X]: Generated auth path: {:?}", &path);
     path.to_string_lossy().into_owned()
 }

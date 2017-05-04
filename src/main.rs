@@ -1,6 +1,8 @@
 #![allow(unused_imports, dead_code)]
 #![allow(useless_format)]
 
+#[macro_use]
+extern crate log;
 extern crate env_logger;
 
 extern crate dbus;
@@ -15,9 +17,6 @@ extern crate users;
 
 extern crate rand;
 extern crate uuid;
-
-#[macro_use]
-mod log;
 
 mod constants;
 mod manager;
@@ -55,9 +54,9 @@ fn main() {
     // start gtk main event loop
     ::gtk::main();
 
-    log_info!("[main] Exited gtk::main loop, cleaning up");
+    info!("[main] Exited gtk::main loop, cleaning up");
     x.stop();
-    log_info!("[main] stopped X");
+    info!("[main] stopped X");
 
     return;
 }

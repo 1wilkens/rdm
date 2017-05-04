@@ -19,10 +19,10 @@ impl Manager {
             Ok(c) => c,
             Err(e) => panic!("Manager: Failed to get DBUS connection: {:?}", e),
         };
-        log_info!("Manager: Opened {:?}", conn);
+        info!("Manager: Opened {:?}", conn);
 
         conn.register_name(DBUS_SERVICE_NAME, NameFlag::ReplaceExisting as u32).unwrap();
-        log_info!("Manager: Registered service name {}", DBUS_SERVICE_NAME);
+        info!("Manager: Registered service name {}", DBUS_SERVICE_NAME);
 
         let root_iface = Interface::new(vec![Method::new("Hello",
                                                          vec![],
@@ -35,9 +35,9 @@ impl Manager {
         let mut root_path = ObjectPath::new(&conn, "/", true);
         root_path.insert_interface(DBUS_ROOT_PATH, root_iface);
         root_path.set_registered(true).unwrap();
-        log_info!("Manager: Registered interface!");
+        info!("Manager: Registered interface!");
 
-        log_info!("Manager: Starting main loop!");
+        info!("Manager: Starting main loop!");
         for n in conn.iter(1) {
             if let ConnectionItem::MethodCall(mut m) = n {
                 if root_path.handle_message(&mut m).is_none() {
@@ -46,12 +46,12 @@ impl Manager {
                                                  "Object path not found")
                             .unwrap())
                         .unwrap();
-                    log_info!("Path not found");
+                    info!("Path not found");
                 } else {
-                    log_info!("Handled method call!");
+                    info!("Handled method call!");
                 }
             };
         }
-        log_info!("Manager: Quit main loop. Exiting..");
+        info!("Manager: Quit main loop. Exiting..");
     }
 }
