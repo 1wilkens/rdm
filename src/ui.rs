@@ -2,7 +2,7 @@ use std::env;
 use std::ffi::CString;
 use std::fs::File;
 use std::io::{Error, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::thread;
 
@@ -23,7 +23,7 @@ pub struct Ui {
 }
 
 impl Ui {
-    pub fn from_theme(theme_name: &str) -> Ui {
+    pub fn from_theme<T: AsRef<Path>>(theme_name: T) -> Ui {
         let theme_path = get_theme_path(theme_name, false);
 
         let mut theme_file = theme_path.clone();
@@ -192,7 +192,7 @@ fn start_session(name: &str) {
     //info!("[ui]: Session exited with return code: {}", result);
 }
 
-fn get_theme_path(theme_name: &str, default: bool) -> PathBuf {
+fn get_theme_path<T: AsRef<Path>>(theme_name: T, default: bool) -> PathBuf {
     let mut theme_path = PathBuf::new();
     theme_path.push(THEME_BASE_PATH);
     theme_path.push(theme_name);
