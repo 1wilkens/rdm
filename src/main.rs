@@ -18,19 +18,24 @@ extern crate users;
 extern crate rand;
 extern crate uuid;
 
+mod common;
 mod constants;
+mod ipc;
 mod manager;
 mod server;
 mod ui;
 
 use constants::*;
-use ui::*;
+use ui::Ui;
 
-use std::io::Write;
+use std::io::{Read, Write};
 use std::process::{Child, Command};
 
 fn main() {
     env_logger::init().unwrap();
+
+    ipc::test_ipc();
+    return;
 
     let mut x = server::Xserver::new();
     x.start();
@@ -43,7 +48,7 @@ fn main() {
     (::gtk::init()).expect("Failed to initialize gtk");
 
     // get ui components
-    let mut ui = ui::Ui::from_theme("/home/florian/src/rust/rdm/theme/rdm.theme");
+    let mut ui = Ui::from_theme("/home/florian/src/rust/rdm/theme/rdm.theme");
 
     // setup event handlers
     ui.setup_events();

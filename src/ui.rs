@@ -62,7 +62,7 @@ impl Ui {
         }
     }
 
-    pub fn setup_events(&self) {
+    pub fn setup_events(&mut self) {
         info!("[ui]: Setting up events");
         let p_entry = self.secret.clone();
 

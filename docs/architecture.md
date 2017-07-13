@@ -1,23 +1,29 @@
-## Architecture
+# architecture.md
+
+## General
+
 - Multiprocess (Daemon <-> Greeter)
-    - Communication via DBUS (or pipes)
+    - Communication via unix socket in `/var/run/rdm/ipc.socket`
+    - Library for greeter
+        - Rust
+        - C (wrapping Rust)
     - React to session close -> show new greeter (DBUS ?)
-- Main executable (`rdm`) launches Manager
-    - -> Manager acquires DBUS name
-    - -> Launches greeter in a new process
-    - -> And starts event loop (quit via signals)
+- Main executable (`rdm`) launches sub 'Managers'
+    - SeatManager
+    - DisplayManager
+    - PowerManager?
 - One Greeter implementation initially (GTK based)
 
 ## Authentication
 - Use new process for each pam authentication process as systemd maps pid to sessions/users => worker?
 - Additional policy file required to start logind session? (`/etc/dbus-1/systemd./rdm.conf` ??)
 
-## Theming
-- GTK Greeter
+## Greeter
+- GTK based
     - Theme is GTK-.xml
     - Mandatory input fields identified via names
     - Single background image (initially) named `background.png`
-- Other greeters? 
+- Connects to socket
 
 ## Problems/Questions
 - Signalhandling?? (Raw C API safe enough?)
