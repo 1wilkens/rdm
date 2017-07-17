@@ -21,7 +21,7 @@ pub const XAUTH_EXECUTABLE: &'static str = "/usr/bin/xauth";
 pub const XSESSIONS_DIRECTORY: &'static str = "/usr/share/xsessions";
 
 /* -- X SERVER SETTINGS --*/
-pub const X_DEFAULT_ARGS: [&'static str; 5] = ["-nolisten", "tcp", "-logverbose", "6", "-noreset"];
+pub const X_DEFAULT_ARGS: [&'static str; 5] = ["-nolisten", "tcp", "-logverbose", "75", "-noreset"];
 pub const X_DEFAULT_DISPLAY: &'static str = ":0";
 pub const X_DEFAULT_VT: &'static str = "vt01";
 pub const X_ARG_AUTH: &'static str = "-auth";

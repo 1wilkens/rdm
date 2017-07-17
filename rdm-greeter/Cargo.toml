@@ -1,0 +1,18 @@
+[package]
+name = "rdm-greeter"
+version = "0.0.1"
+authors = ["Florian Wilkens <gh@1wilkens.org>"]
+description = "Default greeter for rdm"
+repository = "https://github.com/1wilkens/rdm"
+readme = "README.md"
+license = "MIT"
+
+[dependencies]
+env_logger = "0.3.4"
+log = "0.3.6"
+rdmgreeter = { path = "../libgreeter" }
+
+gdk = "0.5.2"
+gdk-pixbuf = "0.1.2"
+gtk = { version = "0.1.2", features = [ "v3_10" ] }
+

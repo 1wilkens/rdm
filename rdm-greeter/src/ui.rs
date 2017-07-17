@@ -10,16 +10,14 @@ use gtk::prelude::*;
 use gdk::{screen_width, screen_height};
 use gdk_pixbuf::Pixbuf;
 use gtk::{Builder, Entry, Image, Window};
-use libc::{initgroups, setuid};
-use pam_auth::Authenticator;
 
 use constants::*;
 
 pub struct Ui {
-    pub window: Window,
-    pub background: Image,
-    pub user: Entry,
-    pub secret: Entry,
+    window: Window,
+    background: Image,
+    user: Entry,
+    secret: Entry,
 }
 
 impl Ui {
@@ -84,22 +82,7 @@ impl Ui {
                 let user = u_entry.get_text().unwrap_or_default();
                 let password = p_entry.get_text().unwrap_or_default();
 
-                let mut auth = Authenticator::new(APPLICATION_NAME)
-                    .expect("[ui]: Failed to get PAM authenticator!");
-                auth.close_on_drop = false; //TODO: change this in release
-                auth.set_credentials(&user, &password);
-
-                let code1 = auth.authenticate();
-                let code2 = auth.open_session();
-                if code1.is_ok() && code2.is_ok() {
-                    info!("[ui]: Authentication successful! Hiding window");
-
-                    window.destroy();
-                    start_session(&user);
-                } else {
-                    info!("[ui]: authenticate={:?}, open_session={:?}", code1, code2);
-                    p_entry.set_text("");
-                }
+                // TODO: use librdmgreeter to talk to daemon to authenticate
             }
             Inhibit(true)
         });
@@ -111,7 +94,7 @@ impl Ui {
     }
 }
 
-fn start_session(name: &str) {
+/*fn start_session(name: &str) {
     use users::os::unix::UserExt;
     use std::os::unix::io::AsRawFd;
     use std::os::unix::io::FromRawFd;
@@ -190,7 +173,7 @@ fn start_session(name: &str) {
     //let result = child.wait()
     //    .unwrap_or_else(|e| panic!("[ui]: Failed to join session thread: {:?}!", e));
     //info!("[ui]: Session exited with return code: {}", result);
-}
+}*/
 
 fn get_theme_path<T: AsRef<Path>>(theme_name: T, default: bool) -> PathBuf {
     let mut theme_path = PathBuf::new();

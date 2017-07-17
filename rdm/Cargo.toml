@@ -1,0 +1,24 @@
+[package]
+name = "rdm"
+version = "0.0.1"
+authors = ["Florian Wilkens <gh@1wilkens.org>"]
+description = "Simple Display Manager inspired by SLiM"
+repository = "https://github.com/1wilkens/rdm"
+readme = "README.md"
+license = "MIT"
+
+[dependencies]
+rdmcommon = { path = "../libcommon"}
+env_logger = "0.3.4"
+log = "0.3.6"
+rand = "0.3.14"
+uuid = { version = "0.2.2", features = [ "v4" ] }
+
+gdk = "0.5.2"
+gdk-pixbuf = "0.1.2"
+gtk = { version = "0.1.2", features = [ "v3_10" ] }
+
+dbus = "0.3.4"
+pam-auth = "0.5.0"
+libc = "0.2.20"
+users = "0.5.2"

@@ -1,0 +1,12 @@
+[package]
+name = "rdmgreeter"
+version = "0.0.1"
+authors = ["Florian Wilkens <gh@1wilkens.org>"]
+description = "Greeter library for rdm"
+repository = "https://github.com/1wilkens/rdm"
+readme = "README.md"
+license = "MIT"
+
+[dependencies]
+log = "0.3.6"
+rdmcommon = { path = "../libcommon"}
