@@ -16,6 +16,11 @@ extern crate uuid;
 
 extern crate rdmcommon;
 
+extern crate futures;
+extern crate tokio_core;
+extern crate tokio_service;
+extern crate tokio_uds;
+
 mod common;
 mod constants;
 mod displaymanager;
@@ -31,13 +36,18 @@ use constants::*;
 use std::io::{Read, Write};
 use std::process::{Child, Command};
 
+use tokio_core::reactor::Core;
+
 fn main() {
-    env_logger::init().expect("Failed to initialize env_logger");
+    env_logger::init().expect("Failed to initialize logger");
 
-    let mut mgr_display = displaymanager::DisplayManager::new();
-    let mut mgr_seat = seatmanager::SeatManager::new();
+    let core = Core::new().expect("Failed to initialize core");
 
-    ipc::test_ipc();
+    let mut display_mgr = displaymanager::DisplayManager::new();
+    let mut seat_mgr = seatmanager::SeatManager::new();
+    seat_mgr.add_seat("seat0");
+    
+    let ipc_mgr = ipc::IpcManager::new(&core.handle()).expect("Failed to initialize IpcManager");
 
     return;
 }

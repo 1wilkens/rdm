@@ -9,3 +9,10 @@ license = "MIT"
 
 [dependencies]
 log = "0.3.6"
+
+bytes = "0.4.4"
+futures = "0.1.14"
+tokio-core = "0.1.2"
+tokio-io = "0.1.2"
+tokio-proto = "0.1.1"
+tokio-service = "0.1.0"

@@ -1,66 +1,96 @@
-use std::io::{Read, Write};
+use std::io::{self, Read, Write};
 use std::net::{Shutdown};
 use std::os::unix::io::{AsRawFd, FromRawFd};
-use std::os::unix::net::{UnixListener, UnixStream};
 use std::str;
+use std::sync::Arc;
 use std::thread;
 
 use rdmcommon::ipc;
 
-pub fn test_ipc() {
-    let mut sock = UnixListener::bind("/home/florian/tmp/sock").unwrap();
-    println!("Opened socket");
+use futures::future::{self, Future, BoxFuture};
+use tokio_core::reactor::Handle;
+use tokio_service::Service;
+use tokio_uds::{UnixListener, UnixStream};
 
-    for stream in sock.incoming() {
+pub struct IpcManager {
+    listener: UnixListener
+}
+
+pub struct IpcService;
+
+impl IpcManager {
+    pub fn new(handle: &Handle) -> Result<IpcManager, ipc::IpcError> {
+        let mut l = UnixListener::bind("/home/florian/tmp/sock", handle)?;
+        Ok(IpcManager {
+            listener: l
+        })
+    }
+}
+
+impl Service for IpcService {
+    // These types must match the corresponding protocol types:
+    type Request = ipc::IpcMessage;
+    type Response = ipc::IpcMessage;
+
+    // For non-streaming protocols, service errors are always io::Error
+    type Error = io::Error;
+
+    // The future for computing the response; box it for simplicity.
+    type Future = BoxFuture<Self::Response, Self::Error>;
+
+    // Produce a future for computing a response from a request.
+    fn call(&self, req: Self::Request) -> Self::Future {
+        // In this case, the response is immediate.
+        future::ok(req).boxed()
+    }
+}
+
+/*fn listen(listener: &mut UnixListener) {
+    for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
-                /* connection succeeded */
                 {
                     let fd = &mut stream.as_raw_fd();
                     println!("fd: {:?}", fd);
                 }
-                thread::spawn(move || handle_greeter(stream));
+                thread::spawn(move || accept_greeter(stream));
             }
-            Err(err) => {
-                /* connection failed */
+            Err(_) => {
                 break;
             }
         }
     }
+}*/
 
-    println!("Dropping socket");
-    drop(sock);
-    println!("Dropped socket");
-}
-
-fn handle_greeter(mut stream: UnixStream) {
-    println!("[handle_greeter]: Accepting new client!");
+fn accept_greeter(mut stream: UnixStream) {
+    println!("[ipc::accept_greeter]: Accepting new client!");
 
     loop {
-        println!("[handle_greeter]: Waiting for client message..");
+        println!("[ipc::accept_greeter]: Waiting for client message..");
 
         match handle_message(&stream) {
             Ok(resp)  => {
-                println!("[handle_greeter]: Writing response");
-                resp.write_to_stream(&mut stream);
+                println!("[ipc::accept_greeter]: Got valid message. Writing response..");
             },
             Err(_)  => {
-                close_socket(stream);
+                println!("[ipc::accept_greeter]: Got invalid message. Closing stream..");
+                close_stream(&stream);
                 return;
             }
         }
     }
 }
 
-fn handle_message(stream: &UnixStream) -> Result<ipc::IpcMessage, ipc::IpcParseError>{
-    let msg = ipc::IpcMessage::from_reader(stream)?;
+fn handle_message(stream: &UnixStream) -> Result<ipc::IpcMessage, ipc::IpcError>{
+    /*let msg = ipc::IpcMessage::from_reader(stream)?;
 
-    println!("[handle_message]: Got valid message: {:?}", &msg);
+    println!("[ipc::handle_message]: Got valid message: {:?}", &msg);
     let resp = ipc::IpcMessage::assemble(ipc::IpcMessageKind::ServerHello, None);
-    Ok(resp)
+    Ok(resp)*/
+    Err(ipc::IpcError::WrongMagic)
 }
 
-fn close_socket(stream: UnixStream) {
-    println!("Shutting down stream: {:?}", stream);
-    stream.shutdown(Shutdown::Both);
+fn close_stream(stream: &UnixStream) {
+    println!("[ipc::close_stream] Shutting down stream: {:?}", stream);
+    let _ = stream.shutdown(Shutdown::Both);
 }
