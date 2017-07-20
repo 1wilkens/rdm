@@ -13,7 +13,9 @@ rdmcommon = { path = "../libcommon"}
 futures = "0.1.14"
 tokio-core = "0.1.2"
 tokio-service = "0.1.0"
+tokio-proto = "0.1.1"
 tokio-uds = "0.1.5"
+tokio-uds-proto = "0.1.0"
 
 env_logger = "0.3.4"
 log = "0.3.6"

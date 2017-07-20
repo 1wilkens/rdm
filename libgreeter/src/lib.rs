@@ -1,12 +1,12 @@
 extern crate log;
 
-pub fn hello() {
-    println!("Hello from librdm");
-}
+extern crate rdmcommon;
 
 use std::io::{Read, Write};
 use std::net::Shutdown;
 use std::os::unix::net::UnixStream;
+
+use rdmcommon::ipc;
 
 #[derive(Debug)]
 pub struct RdmGreeter {
@@ -34,6 +34,20 @@ impl RdmGreeter {
             Ok(())  => println!("Successful flush"),
             Err(e)  => println!("Error during flush: {:?}", e)
         }
+
+        msg.clear();
+        unsafe { msg.set_len(8) };
+        println!("reading...");
+        sock.read_exact(&mut msg);
+        println!("reading done..");
+        match ipc::IpcMessage::from_bytes(&msg[2..4]) {
+            Some(ipc::IpcMessage::ServerHello) => (),
+            m => {
+                println!("Did not get ServerHello: {:?}", m);
+                return None;
+            }
+        }
+
         Some(RdmGreeter {
             sock: sock
         })

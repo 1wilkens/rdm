@@ -23,6 +23,7 @@ fn main() {
     println!("Requested authentication.. press any key to to exit");
     c = ::std::io::stdin().read_line(&mut res);
     println!("{:?}", greeter);
+    return;
 
     // Init gtk
     (::gtk::init()).expect("Failed to initialize gtk");

@@ -19,7 +19,9 @@ extern crate rdmcommon;
 extern crate futures;
 extern crate tokio_core;
 extern crate tokio_service;
+extern crate tokio_proto;
 extern crate tokio_uds;
+extern crate tokio_uds_proto;
 
 mod common;
 mod constants;
@@ -46,8 +48,11 @@ fn main() {
     let mut display_mgr = displaymanager::DisplayManager::new();
     let mut seat_mgr = seatmanager::SeatManager::new();
     seat_mgr.add_seat("seat0");
-    
-    let ipc_mgr = ipc::IpcManager::new(&core.handle()).expect("Failed to initialize IpcManager");
+
+    let handle = core.handle();
+
+    let mut ipc_mgr = ipc::IpcManager::new().expect("Failed to initialize IpcManager");
+    ipc_mgr.start();
 
     return;
 }

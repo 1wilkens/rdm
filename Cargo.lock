@@ -421,8 +421,10 @@ dependencies = [
  "rand 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "rdmcommon 0.0.1",
  "tokio-core 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio-proto 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio-service 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio-uds 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio-uds-proto 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "users 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -573,6 +575,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-uds-proto"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "futures 0.1.14 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio-core 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio-proto 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio-service 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio-uds 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "users"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -667,6 +681,7 @@ dependencies = [
 "checksum tokio-proto 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "8fbb47ae81353c63c487030659494b295f6cb6576242f907f203473b191b0389"
 "checksum tokio-service 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "24da22d077e0f15f55162bdbdc661228c1581892f52074fb242678d015b45162"
 "checksum tokio-uds 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "6116c71be48f8f1656551fd16458247fdd6c03201d7893ad81189055fcde03e8"
+"checksum tokio-uds-proto 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "dca49ad7fe77611e593350d3996579dc94c115c3bd39643f0bc86239d74547b9"
 "checksum users 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "a7ae8fdf783cb9652109c99886459648feb92ecc749e6b8e7930f6decba74c7c"
 "checksum utf8-ranges 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)" = "a1ca13c08c41c9c3e04224ed9ff80461d97e121589ff27c753a16cb10830ae0f"
 "checksum uuid 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "885acc3b17fdef6230d1f7765dff1106dfd5e75a93c2f26459fbf600ed6dcc14"

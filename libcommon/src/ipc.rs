@@ -20,7 +20,7 @@ pub enum IpcError {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub enum IpcMessageKind {
+pub enum IpcMessage {
     ClientHello,
     ServerHello,
     ClientBye,
@@ -28,15 +28,8 @@ pub enum IpcMessageKind {
 }
 
 #[derive(Debug)]
-pub struct IpcMessage {
-    kind: IpcMessageKind,
-    payload: Option<Vec<u8>>
-}
-
-#[derive(Debug)]
 pub struct IpcMessageCodec {
-    to_read: usize,
-    kind: Option<IpcMessageKind>
+    to_read: usize
 }
 
 #[derive(Debug)]
@@ -67,42 +60,32 @@ impl From<io::Error> for IpcError {
     }
 }
 
-impl IpcMessageKind {
-    pub fn from_bytes(bytes: &[u8]) -> Option<IpcMessageKind> {
+impl IpcMessage {
+    pub fn from_bytes(bytes: &[u8]) -> Option<IpcMessage> {
         match str::from_utf8(bytes) {
             Ok(s)   => match s {
-                "CH" => Some(IpcMessageKind::ClientHello),
-                "SH" => Some(IpcMessageKind::ServerHello),
-                "CB" => Some(IpcMessageKind::ClientBye),
-                "RA" => Some(IpcMessageKind::RequestAuthentication),
+                "CH" => Some(IpcMessage::ClientHello),
+                "SH" => Some(IpcMessage::ServerHello),
+                "CB" => Some(IpcMessage::ClientBye),
+                "RA" => Some(IpcMessage::RequestAuthentication),
                 _    => None
             },
             Err(_)  => None
         }
     }
 
-    pub fn as_bytes(&self) -> &[u8] {
+    pub fn tag(&self) -> &[u8] {
         match *self {
-            IpcMessageKind::ClientHello => b"CH",
-            IpcMessageKind::ServerHello => b"SH",
-            IpcMessageKind::ClientBye => b"CB",
-            IpcMessageKind::RequestAuthentication => b"RA"
-        }
-    }
-}
-
-impl IpcMessage {
-    pub fn assemble(kind: IpcMessageKind, payload: Option<&str>) -> IpcMessage {
-        IpcMessage {
-            kind: kind,
-            payload: payload.map(|s| Vec::from(s.as_bytes()))
+            IpcMessage::ClientHello => b"CH",
+            IpcMessage::ServerHello => b"SH",
+            IpcMessage::ClientBye => b"CB",
+            IpcMessage::RequestAuthentication => b"RA"
         }
     }
 
     pub fn length(&self) -> usize {
-        match self.payload {
-            Some(ref p) => p.len(),
-            None => 0
+        match self {
+            _ => 0
         }
     }
 
@@ -111,17 +94,15 @@ impl IpcMessage {
         let mut buf = Vec::with_capacity(length as usize);
 
         write_i16(&mut buf, MAGIC);
-        buf.extend(self.kind.as_bytes());
+        buf.extend(self.tag());
         write_i32(&mut buf, length as i32);
 
-        if let Some(ref p) = self.payload {
-            buf.extend(p)
-        }
+        //TODO: write payload if any
         buf
     }
 }
 
-impl IpcMessageCodec {
+/*impl IpcMessageCodec {
     pub fn new() -> IpcMessageCodec {
         IpcMessageCodec { to_read: HEADER_SIZE, kind: None }
     }
@@ -187,9 +168,9 @@ impl<T: AsyncRead + AsyncWrite + 'static> ServerProto<T> for IpcProto {
     fn bind_transport(&self, io: T) -> Self::BindTransport {
         Ok(io.framed(IpcMessageCodec::new()))
     }
-}
+}*/
 
-fn validate_header(msg: &[u8]) -> Result<(IpcMessageKind, usize), IpcError> {
+fn validate_header(msg: &[u8]) -> Result<(IpcMessage, usize), IpcError> {
     if msg.len() < 8 {
         println!("[validate_message]: Wrong length: {}", msg.len());
         return Err(IpcError::HeaderTooShort);
@@ -199,7 +180,7 @@ fn validate_header(msg: &[u8]) -> Result<(IpcMessageKind, usize), IpcError> {
         println!("[validate_message]: Wrong magic");
         return Err(IpcError::WrongMagic);
     }
-    let kind = match IpcMessageKind::from_bytes(&msg[2..4]) {
+    let kind = match IpcMessage::from_bytes(&msg[2..4]) {
         Some(k) => k,
         None => {
             println!("[validate_message]: Invalid kind");

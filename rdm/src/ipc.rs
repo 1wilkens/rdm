@@ -1,6 +1,7 @@
 use std::io::{self, Read, Write};
 use std::net::{Shutdown};
 use std::os::unix::io::{AsRawFd, FromRawFd};
+use std::os::unix::net::{UnixListener, UnixStream};
 use std::str;
 use std::sync::Arc;
 use std::thread;
@@ -10,24 +11,38 @@ use rdmcommon::ipc;
 use futures::future::{self, Future, BoxFuture};
 use tokio_core::reactor::Handle;
 use tokio_service::Service;
-use tokio_uds::{UnixListener, UnixStream};
 
 pub struct IpcManager {
     listener: UnixListener
 }
 
-pub struct IpcService;
+struct IpcService;
 
 impl IpcManager {
-    pub fn new(handle: &Handle) -> Result<IpcManager, ipc::IpcError> {
-        let mut l = UnixListener::bind("/home/florian/tmp/sock", handle)?;
+    pub fn new() -> Result<IpcManager, ipc::IpcError> {
+        let l = UnixListener::bind("/home/florian/tmp/sock")?;
         Ok(IpcManager {
             listener: l
         })
     }
+
+    pub fn start(&mut self) {
+        for socket in self.listener.incoming() {
+            thread::spawn(move || accept_greeter(socket.unwrap()));
+        }
+    }
 }
 
-impl Service for IpcService {
+impl IpcService {
+    fn handle_message(&self, msg: ipc::IpcMessage) -> io::Result<ipc::IpcMessage> {
+        match msg {
+            ipc::IpcMessage::ClientHello => Ok(ipc::IpcMessage::ServerHello),
+            _   => Err(io::Error::new(io::ErrorKind::InvalidData, ipc::IpcError::InvalidMessageKind))
+        }
+    }
+}
+
+/*impl Service for IpcService {
     // These types must match the corresponding protocol types:
     type Request = ipc::IpcMessage;
     type Response = ipc::IpcMessage;
@@ -40,12 +55,15 @@ impl Service for IpcService {
 
     // Produce a future for computing a response from a request.
     fn call(&self, req: Self::Request) -> Self::Future {
-        // In this case, the response is immediate.
-        future::ok(req).boxed()
+        match self.handle_message(req) {
+    let resp = 
+            Ok(resp) => future::ok(resp).boxed(),
+            Err(err) => future::err(err).boxed()
+        }
     }
 }
 
-/*fn listen(listener: &mut UnixListener) {
+fn listen(listener: &mut UnixListener) {
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
@@ -71,6 +89,7 @@ fn accept_greeter(mut stream: UnixStream) {
         match handle_message(&stream) {
             Ok(resp)  => {
                 println!("[ipc::accept_greeter]: Got valid message. Writing response..");
+                stream.write_all(&resp.as_bytes());
             },
             Err(_)  => {
                 println!("[ipc::accept_greeter]: Got invalid message. Closing stream..");
@@ -81,13 +100,17 @@ fn accept_greeter(mut stream: UnixStream) {
     }
 }
 
-fn handle_message(stream: &UnixStream) -> Result<ipc::IpcMessage, ipc::IpcError>{
-    /*let msg = ipc::IpcMessage::from_reader(stream)?;
+fn handle_message(mut stream: &UnixStream) -> Result<ipc::IpcMessage, ipc::IpcError>{
+    let service = IpcService;
 
-    println!("[ipc::handle_message]: Got valid message: {:?}", &msg);
-    let resp = ipc::IpcMessage::assemble(ipc::IpcMessageKind::ServerHello, None);
-    Ok(resp)*/
-    Err(ipc::IpcError::WrongMagic)
+    let mut buf = [0u8; ipc::HEADER_SIZE];
+    stream.read_exact(&mut buf)?;
+
+    let msg = ipc::IpcMessage::from_bytes(&buf[2..4]);
+    match msg {
+        Some(msg) => Ok(service.handle_message(msg).unwrap()),
+        None => Err(ipc::IpcError::InvalidMessageKind)
+    }
 }
 
 fn close_stream(stream: &UnixStream) {
