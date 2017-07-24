@@ -11,6 +11,9 @@ extern crate gtk;
 mod constants;
 mod ui;
 
+use std::rc::Rc;
+use std::sync::Mutex;
+
 fn main() {
     // Init env_logger
     env_logger::init().expect("Failed to initialize env_logger");
@@ -23,14 +26,13 @@ fn main() {
     println!("Requested authentication.. press any key to to exit");
     c = ::std::io::stdin().read_line(&mut res);
     println!("{:?}", greeter);
-    return;
+    //let mutex = Mutex::new(greeter);
 
     // Init gtk
     (::gtk::init()).expect("Failed to initialize gtk");
 
     // Setup the Ui
-    let mut ui = ui::Ui::from_theme(constants::THEME_NAME_DEFAULT);
-    ui.setup_events();
+    let mut ui = ui::Ui::from_theme(constants::THEME_NAME_DEFAULT, greeter);
     ui.show();
 
     // Start gtk event loop

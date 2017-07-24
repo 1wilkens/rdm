@@ -1,9 +1,11 @@
 use std::env;
+use std::cell::RefCell;
 use std::ffi::CString;
 use std::fs::File;
 use std::io::{Error, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::rc::{Rc};
 use std::thread;
 
 use gtk::prelude::*;
@@ -11,17 +13,21 @@ use gdk::{screen_width, screen_height};
 use gdk_pixbuf::Pixbuf;
 use gtk::{Builder, Entry, Image, Window};
 
+use rdmgreeter::RdmGreeter;
+
 use constants::*;
 
+// Regarding Rc/RefCell see: https://stackoverflow.com/a/31967816
 pub struct Ui {
     window: Window,
     background: Image,
     user: Entry,
     secret: Entry,
+    greeter: RefCell<RdmGreeter>,
 }
 
 impl Ui {
-    pub fn from_theme<T: AsRef<Path>>(theme_name: T) -> Ui {
+    pub fn from_theme<T: AsRef<Path>>(theme_name: T, greeter: RdmGreeter) -> Rc<Ui> {
         let theme_path = get_theme_path(theme_name, false);
 
         let mut theme_file = theme_path.clone();
@@ -52,43 +58,48 @@ impl Ui {
 
         bg.set_from_pixbuf(Some(&pb));
 
-        Ui {
+        let instance = Rc::new(Ui {
             window: w,
             background: bg,
             user: user,
             secret: secret,
+            greeter: RefCell::from(greeter),
+        });
+
+        {
+            let secret = instance.secret.clone();
+
+            instance.user.connect_key_release_event(move |_, e| {
+                let val = (*e).get_keyval();
+                if val == KEYVAL_ENTER {
+                    secret.grab_focus();
+                }
+                Inhibit(true)
+            });
         }
+
+        {
+            let i = instance.clone();
+            let user = instance.user.clone();
+            let secret = instance.secret.clone();
+
+            instance.secret.connect_key_release_event(move |_, e| {
+                let val = (*e).get_keyval();
+                if val == KEYVAL_ENTER {
+                    let user = user.get_text().unwrap_or_default();
+                    let password = secret.get_text().unwrap_or_default();
+
+                    // TODO: use librdmgreeter to talk to daemon to authenticate
+                    i.greeter.borrow_mut().request_authentication();
+                }
+                Inhibit(true)
+            });
+        }
+
+        instance
     }
 
-    pub fn setup_events(&mut self) {
-        info!("[ui]: Setting up events");
-        let p_entry = self.secret.clone();
-
-        self.user.connect_key_release_event(move |_, e| {
-            let val = (*e).get_keyval();
-            if val == KEYVAL_ENTER {
-                p_entry.grab_focus();
-            }
-            Inhibit(true)
-        });
-
-        let u_entry = self.user.clone();
-        let p_entry = self.secret.clone();
-        let window = self.window.clone();
-
-        self.secret.connect_key_release_event(move |_, e| {
-            let val = (*e).get_keyval();
-            if val == KEYVAL_ENTER {
-                let user = u_entry.get_text().unwrap_or_default();
-                let password = p_entry.get_text().unwrap_or_default();
-
-                // TODO: use librdmgreeter to talk to daemon to authenticate
-            }
-            Inhibit(true)
-        });
-    }
-
-    pub fn show(&mut self) {
+    pub fn show(&self) {
         info!("[ui]: Showing window");
         self.window.show_all();
     }
