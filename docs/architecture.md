@@ -15,7 +15,13 @@
 - One Greeter implementation initially (GTK based)
 
 ## Authentication
-- Use new process for each pam authentication process as systemd maps pid to sessions/users => worker?
+- Use new process for each pam authentication process as systemd maps pid to sessions/users
+    - daemon: get crendentials from greeter -> spawn session-helper
+    - session-helpder: get credentials from daemon
+        - authenticate against pam
+        - spawn user session (if successful)
+        - wait for user session to exit
+        - cleanup and exit
 - Additional policy file required to start logind session? (`/etc/dbus-1/systemd./rdm.conf` ??)
 
 ## Greeter

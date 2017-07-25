@@ -19,13 +19,10 @@ fn main() {
     env_logger::init().expect("Failed to initialize env_logger");
     
     let mut greeter = rdmgreeter::RdmGreeter::new().expect("Failed to get greeter");
+    println!("{:?}", greeter);
     println!("Got greeter.. press any key to to continue");
     let mut res = String::new();
     let mut c = ::std::io::stdin().read_line(&mut res);
-    greeter.request_authentication();
-    println!("Requested authentication.. press any key to to exit");
-    c = ::std::io::stdin().read_line(&mut res);
-    println!("{:?}", greeter);
     //let mutex = Mutex::new(greeter);
 
     // Init gtk

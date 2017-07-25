@@ -90,7 +90,7 @@ impl Ui {
                     let password = secret.get_text().unwrap_or_default();
 
                     // TODO: use librdmgreeter to talk to daemon to authenticate
-                    i.greeter.borrow_mut().request_authentication();
+                    i.greeter.borrow_mut().request_authentication(&user, &password);
                 }
                 Inhibit(true)
             });

@@ -53,7 +53,7 @@ impl RdmGreeter {
         })
     }
 
-    pub fn request_authentication(&mut self) {
+    pub fn request_authentication(&mut self, user: &str, password: &str) {
         let mut msg = Vec::with_capacity(8);
         msg.extend(b"1wRA\0\0\0\0");
         println!("Writing RA: {:?}", &msg);
