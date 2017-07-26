@@ -13,6 +13,9 @@ use gdk::{screen_width, screen_height};
 use gdk_pixbuf::Pixbuf;
 use gtk::{Builder, Entry, Image, Window};
 
+use slog::Logger;
+
+use rdmcommon::util;
 use rdmgreeter::RdmGreeter;
 
 use constants::*;
@@ -24,10 +27,11 @@ pub struct Ui {
     user: Entry,
     secret: Entry,
     greeter: RefCell<RdmGreeter>,
+    log: Logger,
 }
 
 impl Ui {
-    pub fn from_theme<T: AsRef<Path>>(theme_name: T, greeter: RdmGreeter) -> Rc<Ui> {
+    pub fn from_theme<T: AsRef<Path>>(theme_name: T, greeter: RdmGreeter) -> Rc<Self> {
         let theme_path = get_theme_path(theme_name, false);
 
         let mut theme_file = theme_path.clone();
@@ -64,6 +68,7 @@ impl Ui {
             user: user,
             secret: secret,
             greeter: RefCell::from(greeter),
+            log: util::plain_logger()
         });
 
         {
@@ -100,7 +105,7 @@ impl Ui {
     }
 
     pub fn show(&self) {
-        info!("[ui]: Showing window");
+        info!(self.log, "[ui]: Showing window");
         self.window.show_all();
     }
 }

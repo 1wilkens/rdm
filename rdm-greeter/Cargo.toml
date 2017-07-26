@@ -8,8 +8,11 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
-env_logger = "0.3.4"
-log = "0.3.6"
+slog = "2.0"
+slog-async = "2.0"
+slog-term = "2.0"
+
+rdmcommon = { path = "../libcommon" }
 rdmgreeter = { path = "../libgreeter" }
 
 gdk = "0.5.2"

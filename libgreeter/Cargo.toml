@@ -8,5 +8,5 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
-log = "0.3.6"
+slog = "2.0"
 rdmcommon = { path = "../libcommon"}

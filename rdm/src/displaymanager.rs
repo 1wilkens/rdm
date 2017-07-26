@@ -3,7 +3,7 @@ pub struct DisplayManager {
 }
 
 impl DisplayManager {
-    pub fn new() -> DisplayManager {
+    pub fn new() -> Self {
         DisplayManager {}
     }
 }

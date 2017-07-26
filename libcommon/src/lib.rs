@@ -1,4 +1,6 @@
-extern crate log;
+#[macro_use]
+extern crate slog;
+extern crate slog_term;
 
 extern crate bytes;
 extern crate futures;

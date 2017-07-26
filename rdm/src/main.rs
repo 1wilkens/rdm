@@ -2,8 +2,11 @@
 #![allow(useless_format)]
 
 #[macro_use]
-extern crate log;
-extern crate env_logger;
+extern crate clap;
+#[macro_use]
+extern crate slog;
+extern crate slog_async;
+extern crate slog_term;
 
 extern crate dbus;
 extern crate libc;
@@ -36,23 +39,47 @@ mod session;
 use constants::*;
 
 use std::io::{Read, Write};
-use std::process::{Child, Command};
+use std::process::{Child, Command, exit};
 
-use tokio_core::reactor::Core;
+use clap::{App, Arg, ArgMatches};
+use slog::{Drain, Logger};
+use slog_async::Async;
+use slog_term::{FullFormat, TermDecorator};
 
-fn main() {
-    env_logger::init().expect("Failed to initialize logger");
-
-    let core = Core::new().expect("Failed to initialize core");
+fn run(matches: ArgMatches) -> Result<(), String> {
+    let log = setup_logger();
 
     let mut display_mgr = displaymanager::DisplayManager::new();
     let mut seat_mgr = seatmanager::SeatManager::new();
     seat_mgr.add_seat("seat0");
-
-    let handle = core.handle();
-
+    
     let mut ipc_mgr = ipc::IpcManager::new().expect("Failed to initialize IpcManager");
     ipc_mgr.start();
 
-    return;
+    Ok(())
+}
+
+fn setup_logger() -> Logger {
+    let decor = TermDecorator::new().build();
+    let drain = FullFormat::new(decor).build().fuse();
+    let drain = Async::new(drain).build().fuse();
+    let log = Logger::root(drain, o!());
+    debug!(log, "Initialized logging");
+    log
+}
+
+fn main() {
+    let matches = App::new("rdm")
+        .version("0.1")
+        .about("Rust Display Manager (working title)")
+        .arg(Arg::with_name("verbose")
+            .short("v")
+            .long("verbose")
+            .help("Enable verbose output"))
+        .get_matches();
+
+    if let Err(e) = run(matches) {
+        //error!("Application error: {}", e);
+        std::process::exit(1);
+    }
 }

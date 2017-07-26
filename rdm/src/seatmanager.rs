@@ -6,7 +6,7 @@ pub struct SeatManager {
 }
 
 impl SeatManager {
-    pub fn new() -> SeatManager {
+    pub fn new() -> Self {
         SeatManager {
             seats: Vec::new()
         }
