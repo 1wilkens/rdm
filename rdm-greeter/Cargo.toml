@@ -15,7 +15,7 @@ slog-term = "2.0"
 rdmcommon = { path = "../libcommon" }
 rdmgreeter = { path = "../libgreeter" }
 
-gdk = "0.5.2"
-gdk-pixbuf = "0.1.2"
-gtk = { version = "0.1.2", features = [ "v3_10" ] }
+gdk = "0.7.0"
+gdk-pixbuf = "0.3.0"
+gtk = { version = "0.3.0", features = [ "v3_10" ] }
 

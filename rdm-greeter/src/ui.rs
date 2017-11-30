@@ -9,7 +9,7 @@ use std::rc::{Rc};
 use std::thread;
 
 use gtk::prelude::*;
-use gdk::{screen_width, screen_height};
+use gdk::Screen;
 use gdk_pixbuf::Pixbuf;
 use gtk::{Builder, Entry, Image, Window};
 
@@ -54,7 +54,7 @@ impl Ui {
             .expect("[ui]: Failed to get secret entry from theme!");
 
         // fit to screen dimensions
-        let (width, heigth) = (screen_width(), screen_height());
+        let (width, heigth) = (Screen::width(), Screen::height());
         w.set_default_size(width, heigth);
 
         let pb = Pixbuf::new_from_file_at_scale(bg_file.to_str().unwrap(), width, heigth, false)
