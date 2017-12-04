@@ -22,9 +22,9 @@ extern crate rdmcommon;
 extern crate futures;
 extern crate tokio_core;
 extern crate tokio_service;
-extern crate tokio_proto;
+//extern crate tokio_proto;
 extern crate tokio_uds;
-extern crate tokio_uds_proto;
+//extern crate tokio_uds_proto;
 
 mod common;
 mod constants;

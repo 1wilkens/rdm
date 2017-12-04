@@ -10,5 +10,5 @@ members = [
 lto = true
 
 [replace]
-"rdmgreeter:0.0.1" = { path = "./libgreeter" }
-"rdmcommon:0.0.1" = { path = "./libcommon" }
+#"rdmgreeter:0.0.1" = { path = "./libgreeter" }
+#"rdmcommon:0.0.1" = { path = "./libcommon" }

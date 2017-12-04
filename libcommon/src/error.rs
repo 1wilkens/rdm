@@ -6,7 +6,7 @@ use std::io;
 pub enum IpcError {
     IO(io::Error),
     HeaderTooShort,
-    WrongMagic,
+    InvalidMagic,
     UnknownMessageType
 }
 

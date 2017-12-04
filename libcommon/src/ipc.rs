@@ -1,7 +1,7 @@
 use bytes::{BufMut, BytesMut, BigEndian};
 use tokio_io::codec::{Encoder, Decoder};
 
-use super::error::IpcError;
+pub use super::error::IpcError;
 
 pub const MAGIC: i16 = ((b'1' as i16) << 8) as i16 + b'w' as i16;
 pub const HEADER_SIZE: usize = 8;
@@ -15,11 +15,9 @@ pub enum IpcMessage {
 }
 
 #[derive(Debug)]
-pub struct IpcMessageCodec {
-    to_read: usize
-}
+pub struct IpcMessageCodec;
 
-type DecodeResult = Result<Option<IpcMessage>, IpcError>;
+type DecodeResult = Result<Option<(IpcMessage, usize)>, IpcError>;
 
 impl IpcMessage {
     pub fn message_type(&self) -> &[u8; 2] {
@@ -32,17 +30,11 @@ impl IpcMessage {
     }
 }
 
-impl IpcMessageCodec {
-    pub fn new() -> IpcMessageCodec {
-        IpcMessageCodec { to_read: HEADER_SIZE }
-    }
-}
-
 impl Encoder for IpcMessageCodec {
     type Item = IpcMessage;
     type Error = IpcError;
 
-    fn encode(&mut self, msg: IpcMessage, buf: &mut BytesMut) -> Result<(), IpcError> {
+    fn encode(&mut self, msg: Self::Item, buf: &mut BytesMut) -> Result<(), Self::Error> {
         let len = match msg {
             IpcMessage::ClientHello => 0,
             IpcMessage::ServerHello => 0,
@@ -56,7 +48,15 @@ impl Encoder for IpcMessageCodec {
         buf.extend(msg.message_type());
         buf.put_u32::<BigEndian>(len as u32);
 
-        //TODO: write payload
+        match msg {
+            IpcMessage::RequestAuthentication(ref user, ref secret) => {
+                buf.put_u32::<BigEndian>(user.len() as u32);
+                buf.extend(user.as_bytes());
+                buf.put_u32::<BigEndian>(secret.len() as u32);
+                buf.extend(secret.as_bytes());
+            },
+            _   => ()
+        };
 
         Ok(())
     }
@@ -66,41 +66,38 @@ impl Decoder for IpcMessageCodec {
     type Item = IpcMessage;
     type Error = IpcError;
 
-    fn decode(&mut self, buf: &mut BytesMut) -> DecodeResult {
-        if buf.len() >= HEADER_SIZE {
-            let msg = buf.split_to(8);
-
-            if msg[0] != 0x31 || msg[1] != 0x77 {
-                println!("[validate_message]: Wrong magic");
-                return Err(IpcError::WrongMagic);
+    fn decode(&mut self, buf: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
+        match decode(buf, 0) {
+            Ok(None) => Ok(None),
+            Ok(Some((item ,pos))) => {
+                buf.split_to(pos);
+                Ok(Some(item))
             }
-
-            Ok(Some(IpcMessage::ClientHello))
-        }
-        else {
-            Ok(None)
+            Err(e) => Err(e)
         }
     }
 }
 
-fn validate_header(msg: &[u8]) -> Result<(IpcMessage, u32), IpcError> {
-    if msg.len() < 8 {
-        println!("[validate_message]: Wrong length: {}", msg.len());
+fn decode(buf: &mut BytesMut, idx: usize) -> DecodeResult {
+    let length = buf.len();
+    if length <= idx {
+        return Ok(None);
+    }
+
+    if length < HEADER_SIZE {
         return Err(IpcError::HeaderTooShort);
     }
 
-    if msg[0] != 0x31 || msg[1] != 0x77 {
-        println!("[validate_message]: Wrong magic");
-        return Err(IpcError::WrongMagic);
+    let magic = &buf[idx..idx + 2];
+    if magic[0] != b'1' || magic[1] != b'w' {
+        return Err(IpcError::InvalidMagic);
     }
-    /*let kind = match IpcMessage::from_bytes(&msg[2..4]) {
-        Some(k) => k,
-        None => {
-            println!("[validate_message]: Invalid kind");
-            return Err(IpcError::UnknownMessageType);
-        }
-    };
 
-    Ok((kind, BigEndian::read_u32(&msg[5..8])))*/
-    Err(IpcError::UnknownMessageType)
+    let message_type = &buf[idx + 2..idx + 4];
+    match message_type {
+        b"CH" => Ok(Some((IpcMessage::ClientHello, idx + HEADER_SIZE))),
+        b"SH" => Ok(Some((IpcMessage::ServerHello, idx + HEADER_SIZE))),
+        b"CB" => Ok(Some((IpcMessage::ClientBye, idx + HEADER_SIZE))),
+        _ => Err(IpcError::UnknownMessageType)
+    }
 }

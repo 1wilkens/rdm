@@ -1,36 +1,48 @@
 #[macro_use]
 extern crate slog;
 
+extern crate futures;
+extern crate tokio_core;
+extern crate tokio_io;
+extern crate tokio_uds;
+
 extern crate rdmcommon;
 
 use std::io::{Read, Write};
-use std::net::Shutdown;
-use std::os::unix::net::UnixStream;
+
+use slog::Logger;
+
+use futures::{Stream, Sink};
+use tokio_core::reactor::Handle;
+use tokio_io::AsyncRead;
+use tokio_uds::UnixStream;
 
 use rdmcommon::ipc;
 use rdmcommon::util;
 
-use slog::Logger;
-
-#[derive(Debug)]
 pub struct RdmGreeter {
-    sock: UnixStream,
+    receiver: Box<Stream<Item = ipc::IpcMessage, Error = ipc::IpcError>>,
+    sender: Box<Sink<SinkItem = ipc::IpcMessage, SinkError = ipc::IpcError>>,
     log: Logger
 }
 
 impl RdmGreeter {
-    pub fn new<L : Into<Option<Logger>>>(logger: L) -> Option<RdmGreeter> {
-        let mut sock = match UnixStream::connect("/home/florian/tmp/sock") {
-            Ok(s)   => s,
-            Err(_)  => return None
-        };
+    pub fn new<L : Into<Option<Logger>>>(handle: &Handle, logger: L) -> Option<RdmGreeter> {
         let log = logger.into().unwrap_or(util::plain_logger());
-        ::std::thread::sleep_ms(200);
+        let greeter = UnixStream::connect("/home/florian/tmp/sock", handle).map(move |sock| {
+            let (send, recv) = sock.framed(ipc::IpcMessageCodec).split();
+            /*let resp = send.send(IpcMessage::ClientHello).map(move |r| {
+                // perform handshake here?
+            });*/
+            RdmGreeter {
+                receiver: Box::new(recv),
+                sender: Box::new(send),
+                log: log,
+            }
+        });
 
-        let mut msg = Vec::with_capacity(8);
-        msg.extend(b"1wCH\0\0\0\0");
-        debug!(log, "Writing ClientHello: {:?}", &msg);
-        match sock.write_all(&msg) {
+        //debug!(log, "Writing ClientHello");
+        /*match sock.write_all(&msg) {
             Ok(())  => debug!(log, "Wrote ClientHello"),
             Err(e)  => debug!(log, "Error during ServerHello: {:?}", e)
         }
@@ -38,32 +50,16 @@ impl RdmGreeter {
         match sock.flush() {
             Ok(())  => debug!(log, "Successful flush"),
             Err(e)  => debug!(log, "Error during flush: {:?}", e)
-        }
+        }*/
 
-        msg.clear();
-        unsafe { msg.set_len(8) };
-        debug!(log, "reading...");
-        sock.read_exact(&mut msg);
-        debug!(log, "reading done..");
-        match ipc::IpcMessage::from_bytes(&msg[2..4]) {
-            Some(ipc::IpcMessage::ServerHello) => (),
-            m => {
-                debug!(log, "Did not get ServerHello: {:?}", m);
-                return None;
-            }
-        }
-
-        Some(RdmGreeter {
-            sock: sock,
-            log: log,
-        })
+        Some(greeter.ok().unwrap())
     }
 
-    pub fn request_authentication(&mut self, user: &str, password: &str) {
+    /*pub fn request_authentication(&mut self, user: &str, password: &str) {
         let mut msg = Vec::with_capacity(8);
         msg.extend(b"1wRA\0\0\0\0");
         debug!(self.log, "Writing RA: {:?}", &msg);
-        match self.sock.write_all(&msg) {
+        /*match self.sock.write_all(&msg) {
             Ok(())  => debug!(self.log, "Wrote RA"),
             Err(e)  => debug!(self.log, "Error during ServerHello: {:?}", e)
         }
@@ -71,13 +67,13 @@ impl RdmGreeter {
         match self.sock.flush() {
             Ok(())  => debug!(self.log, "Successful flush"),
             Err(e)  => debug!(self.log, "Error during flush: {:?}", e)
-        }
-    }
+        }*/
+    }*/
 }
 
 impl Drop for RdmGreeter {
     fn drop(&mut self) {
         println!("Dropping RdmGreeter..");
-        self.sock.shutdown(Shutdown::Both).unwrap();
+        //self.sock.shutdown(Shutdown::Both).unwrap();
     }
 }
