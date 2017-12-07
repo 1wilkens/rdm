@@ -21,6 +21,7 @@ extern crate rdmcommon;
 
 extern crate futures;
 extern crate tokio_core;
+extern crate tokio_io;
 extern crate tokio_service;
 //extern crate tokio_proto;
 extern crate tokio_uds;
@@ -53,8 +54,9 @@ fn run(matches: ArgMatches) -> Result<(), String> {
     let mut seat_mgr = seatmanager::SeatManager::new();
     seat_mgr.add_seat("seat0");
     
-    let mut ipc_mgr = ipc::IpcManager::new().expect("Failed to initialize IpcManager");
-    ipc_mgr.start();
+    //let mut ipc_mgr = ipc::IpcManager::new().expect("Failed to initialize IpcManager");
+    ipc::serve(|| Ok(ipc::IpcService));
+    //ipc_mgr.start();
 
     Ok(())
 }

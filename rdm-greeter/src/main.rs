@@ -32,7 +32,7 @@ fn setup_logger() -> Logger {
 fn main() {
     let log = setup_logger();
 
-    //let mut greeter = rdmgreeter::RdmGreeter::new(log).expect("Failed to get greeter");
+    let mut greeter = rdmgreeter::RdmGreeter::new(log).expect("Failed to get greeter");
     println!("Press any key to to continue");
     let mut res = String::new();
     let mut c = ::std::io::stdin().read_line(&mut res);
