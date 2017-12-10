@@ -25,17 +25,18 @@ fn setup_logger() -> Logger {
     let drain = FullFormat::new(decor).build().fuse();
     let drain = Async::new(drain).build().fuse();
     let log = Logger::root(drain, o!());
-    debug!(log, "Initialized logging");
+    debug!(&log, "[setup_logger] Initialized logging");
     log
 }
 
 fn main() {
     let log = setup_logger();
 
-    let mut greeter = rdmgreeter::RdmGreeter::new(log).expect("Failed to get greeter");
-    println!("Press any key to to continue");
+    let mut greeter = rdmgreeter::RdmGreeter::new(log.clone()).expect("Failed to get greeter");
+    debug!(&log, "[main] Got greeter! Press any key to to continue");
     let mut res = String::new();
     let mut c = ::std::io::stdin().read_line(&mut res);
+    return;
 
     // Init gtk
     (::gtk::init()).expect("Failed to initialize gtk");

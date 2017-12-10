@@ -52,6 +52,7 @@ impl Service for IpcService {
     type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, msg: Self::Request) -> Self::Future {
+        println!("[IpcService::call] Received {:?}", msg);
         match msg {
             ipc::IpcMessage::ClientHello => Box::new(future::ok(ipc::IpcMessage::ServerHello)),
             _   => Box::new(future::err(ipc::IpcError::UnknownMessageType))
@@ -67,11 +68,11 @@ pub fn serve<S>(s: S) -> Result<(), ipc::IpcError>
     let mut core = Core::new()?;
     let handle = core.handle();
 
-    let listener = UnixListener::bind("/home/florian/tmp/sock", &handle)?;
+    let listener = UnixListener::bind("/home/florian/tmp/sock", &handle).expect("[serve] Failed to bind socket");
 
     let connections = listener.incoming();
     let srv = connections.for_each(move |(socket, _peer_addr)| {
-        println!("Serving new client..");
+        println!("[serve] Serving new client..");
         let (writer, reader) = socket.framed(ipc::IpcMessageCodec).split();
         let service = s.new_service()?;
 

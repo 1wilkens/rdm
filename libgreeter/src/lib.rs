@@ -26,41 +26,35 @@ pub struct RdmGreeter {
 }
 
 impl RdmGreeter {
-    pub fn new<L : Into<Option<Logger>>>(logger: L) -> Option<RdmGreeter> {
+    pub fn new<L : Into<Option<Logger>>>(logger: L) -> Result<RdmGreeter, ipc::IpcError> {
         let log = logger.into().unwrap_or(util::plain_logger());
         let mut core = Core::new()
             .expect("[rdmgreeter] Failed to instantiate new Core");
         let handle = core.handle();
         // TODO: move this into private fn
-        let sock = UnixStream::connect("/home/florian/tmp/sock", &handle)
-            .expect("[rdmgreeter] Failed to connect to socket");
+        debug!(log, "[RdmGreeter::new] Connecting server socket");
+        let sock = UnixStream::connect("/home/florian/tmp/sock", &handle)?;
         let (tx, rx) = sock.framed(ipc::IpcMessageCodec).split();
-        let handshake = tx.send(ipc::IpcMessage::ClientHello).and_then(move |tx| {
-            Ok(rx.take(1).into_future().map(|(res, rx)| (res, (tx, rx))))
-        });
+        debug!(log, "[RdmGreeter::new] Sending ClientHello");
+        let tx = core.run(tx.send(ipc::IpcMessage::ClientHello))?;
+        debug!(log, "[RdmGreeter::new] Reading server response");
+        let (resp, rx) = core.run(rx.take(1).into_future()).expect("[rdmgreeter] Failed to receive handshake");
 
-        let hs = core.run(handshake);
-        let res = core.run(hs.unwrap());
-        if res.is_ok() {
-            let (res, (tx, rx)) = res.unwrap();
-            match res {
-                Some(ipc::IpcMessage::ServerHello) => Some(RdmGreeter {
-                                                    core: core,
-                                                    receiver: Box::new(rx),
-                                                    sender: Box::new(tx),
-                                                    log: log,
-                                                }),
-                _ => None
-            }
-        }
-        else {
-            None
+        debug!(log, "[RdmGreeter::new] Got server response"; "response" => ?resp);
+        match resp {
+            Some(ipc::IpcMessage::ServerHello) => Ok(RdmGreeter {
+                                                core: core,
+                                                receiver: Box::new(rx),
+                                                sender: Box::new(tx),
+                                                log: log,
+                                            }),
+            _ => Err(ipc::IpcError::UnknownMessageType)
         }
     }
 }
 
 impl Drop for RdmGreeter {
     fn drop(&mut self) {
-        println!("Dropping RdmGreeter..");
+        debug!(self.log, "[RdmGreeter::drop] Dropping RdmGreeter..");
     }
 }
