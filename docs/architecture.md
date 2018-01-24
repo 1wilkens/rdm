@@ -1,6 +1,11 @@
 # **[rdm]** -- architecture.md
 
 ## General
+- Libraries/Technologies
+    - `systemd`/`logind`
+    - `DBUS`
+        - Communication with `logind`
+        - (Communication between greeter and daemon?)
 - Multiprocess (Daemon <=> Greeter)
     - Communication via unix socket in `/var/run/rdm/ipc.socket`
     - Library for greeter
@@ -16,6 +21,8 @@
             - PowerManager?
         - [+] Clear-cut separation of concerns (easier to reason about?)
         - [--] More complexity (`Traits` vs `structs`)
+        - Questions
+            - How to link managers? (Callbacks?, Fn(Once) & friends) / How does this work with struct methods?
     - flat
         - `main` sets up different features sequentially
             - Logging
@@ -29,7 +36,7 @@
 - One Greeter implementation initially (`GTK` based)
 
 ## Authentication/Session management
-- Use new process for each pam authentication process as systemd maps pid to sessions/users
+- Use new process for each pam authentication process as `systemd` maps pid to sessions/users
     - daemon: get credentials from greeter => spawn session-helper
     - session-helper: get credentials from daemon
         - authenticate against pam
