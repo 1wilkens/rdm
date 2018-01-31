@@ -15,7 +15,7 @@ use rdmcommon::util;
 
 use futures::{Future, Stream, Sink};
 use slog::Logger;
-use tokio_core::reactor::{Core, Handle};
+use tokio_core::reactor::Core;
 use tokio_io::AsyncRead;
 use tokio_uds::UnixStream;
 
