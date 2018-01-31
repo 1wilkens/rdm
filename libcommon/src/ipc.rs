@@ -39,7 +39,7 @@ impl Encoder for IpcMessageCodec {
             IpcMessage::ClientHello => 0,
             IpcMessage::ServerHello => 0,
             IpcMessage::ClientBye => 0,
-            IpcMessage::RequestAuthentication(ref user, ref secret) => user.len() + secret.len(),
+            IpcMessage::RequestAuthentication(ref user, ref secret) => user.len() + secret.len() + 8,
             _   => return Err(IpcError::UnknownMessageType)
         };
 
