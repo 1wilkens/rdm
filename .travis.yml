@@ -14,8 +14,8 @@ addons:
       - libdbus-1-dev
 
 script:
-  - cargo build --verbose
-  - cargo test --verbose
+  - cargo build
+  - cargo test
 
 notifications:
   email:
