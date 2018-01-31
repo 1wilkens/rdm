@@ -47,7 +47,7 @@ impl From<ipc::IpcError> for RdmGreeterError {
 
 impl RdmGreeter {
     pub fn new<L : Into<Option<Logger>>>(logger: L) -> Result<RdmGreeter, RdmGreeterError> {
-        let log = logger.into().unwrap_or(util::plain_logger());
+        let log = logger.into().unwrap_or_else(util::plain_logger);
         let mut core = Core::new()?;
         let handle = core.handle();
         // TODO: move this into private fn
