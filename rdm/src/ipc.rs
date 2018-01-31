@@ -4,46 +4,62 @@ use std::os::unix::io::{AsRawFd, FromRawFd};
 use std::sync::Arc;
 use std::thread;
 
-use rdmcommon::ipc;
+use rdmcommon::{ipc, util};
 
 use futures::{future, Future, Stream, Sink};
+use slog::Logger;
 use tokio_core::reactor::{Core, Handle};
 use tokio_io::AsyncRead;
 use tokio_service::{Service, NewService};
 use tokio_uds::UnixListener;
 
 pub struct IpcManager {
-    listener: UnixListener
+    log: Logger,
+    listener: UnixListener,
+    handle: Handle,
 }
 
-pub struct IpcService;
+pub struct IpcService(Logger);
 
-/*impl IpcManager {
-    pub fn new(handle: &Handle) -> Result<IpcManager, ipc::IpcError> {
-        let listener = UnixListener::bind("/home/florian/tmp/sock", handle)?;
-        Ok(IpcManager {listener: listener})
+impl IpcManager {
+    pub fn new<L : Into<Option<Logger>>>(logger: L, handle: &Handle) -> Result<IpcManager, ipc::IpcError> {
+        let log = logger.into().unwrap_or(util::plain_logger());
+        let handle = handle.clone();
+
+        debug!(log, "[IpcManager::new] Binding server socket");
+        let listener = UnixListener::bind("/home/florian/tmp/sock", &handle)?;
+        Ok(IpcManager {log: log, listener: listener, handle: handle})
     }
 
-    pub fn run<S>(&mut self, service: S)
+    /*pub fn run<S>(&mut self, new_service: S, core: Core)
         where S: NewService<Request = ipc::IpcMessage,
                         Response = ipc::IpcMessage,
                         Error = ipc::IpcError> + 'static
     {
-        let connections = self.listener.incoming();
+        let handle = &self.handle;
+        let listener = &mut self.listener;
 
-        let server = connections.for_each(move |(socket, _peer_addr)| {
+        let f = listener.incoming().for_each(|(socket, _peer_addr)| {
             let (writer, reader) = socket.framed(ipc::IpcMessageCodec).split();
-            let service = s.new_service()?;
+            let service = new_service.new_service().expect("[IpcManager::run] Failed to call new_service()");
 
             let responses = reader.and_then(move |req| service.call(req));
-            let server = writer.send_all(responses)
+            let handler = writer.send_all(responses)
                 .then(|_| Ok(()));
-            self.handle.spawn(server);
+
+            handle.spawn(handler);
 
             Ok(())
         });
+    }*/
+}
+
+impl IpcService {
+    pub fn new<L : Into<Option<Logger>>>(logger: L) -> IpcService {
+        let log = logger.into().unwrap_or(util::plain_logger());
+        IpcService(log)
     }
-}*/
+}
 
 impl Service for IpcService {
     type Request = ipc::IpcMessage;
@@ -52,7 +68,7 @@ impl Service for IpcService {
     type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, msg: Self::Request) -> Self::Future {
-        println!("[IpcService::call] Received {:?}", msg);
+        debug!(self.0, "[IpcService::call] Received message"; "msg" => ?msg);
         match msg {
             ipc::IpcMessage::ClientHello => Box::new(future::ok(ipc::IpcMessage::ServerHello)),
             _   => Box::new(future::err(ipc::IpcError::UnknownMessageType))

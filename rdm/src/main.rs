@@ -1,3 +1,4 @@
+#![feature(conservative_impl_trait)]
 #![allow(unused_imports, dead_code)]
 #![allow(useless_format)]
 
@@ -37,6 +38,8 @@ mod seatmanager;
 mod server;
 mod session;
 
+mod login1;
+
 use constants::*;
 
 use std::io::{Read, Write};
@@ -47,15 +50,33 @@ use slog::{Drain, Logger};
 use slog_async::Async;
 use slog_term::{FullFormat, TermDecorator};
 
+use dbus::{BusType, Connection, ConnectionItem, Error, Message, MessageItem, NameFlag};
+use login1::OrgFreedesktopLogin1Manager;
+
+fn test_dbus(log: &Logger) {
+    let conn = match Connection::get_private(BusType::System) {
+        Ok(c) => c,
+        Err(e) => panic!("Manager: Failed to get DBUS connection: {:?}", e),
+    };
+
+    let conn_path = conn.with_path("org.freedesktop.login1", "/org/freedesktop/login1", 1000);
+    let seats = conn_path.list_seats().expect("Failed to list seats");
+    debug!(log, "Got Seats"; "seats" => ?seats);
+    for (name, path) in seats {
+        debug!(log, "Found seat"; "name" => name, "path" => ?path);
+    }
+}
+
 fn run(matches: ArgMatches) -> Result<(), String> {
     let log = setup_logger();
 
     let mut display_mgr = displaymanager::DisplayManager::new();
     let mut seat_mgr = seatmanager::SeatManager::new();
     seat_mgr.add_seat("seat0");
-    
+
+    test_dbus(&log);
     //let mut ipc_mgr = ipc::IpcManager::new().expect("Failed to initialize IpcManager");
-    ipc::serve(|| Ok(ipc::IpcService));
+    //ipc::serve(move || Ok(ipc::IpcService::new(log.clone())));
     //ipc_mgr.start();
 
     Ok(())

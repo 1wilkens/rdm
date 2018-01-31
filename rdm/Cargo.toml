@@ -20,11 +20,11 @@ tokio-uds = "0.1"
 slog = "2.0"
 slog-async = "2.0"
 slog-term = "2.0"
-clap = "2.25"
+clap = "2.29"
 rand = "0.3"
 uuid = { version = "0.2", features = [ "v4" ] }
 
-dbus = "0.3"
+dbus = "^0.6"
 pam-auth = "0.5"
 libc = "0.2"
 users = "0.5"
