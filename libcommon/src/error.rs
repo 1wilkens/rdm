@@ -16,8 +16,8 @@ impl Error for IpcError {
     }
 
     fn cause(&self) -> Option<&Error> {
-        match self {
-            &IpcError::IO(ref err)  => Some(err),
+        match *self {
+            IpcError::IO(ref err) => Some(err),
             _   => None
         }
     }

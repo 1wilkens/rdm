@@ -36,9 +36,7 @@ impl Encoder for IpcMessageCodec {
 
     fn encode(&mut self, msg: Self::Item, buf: &mut BytesMut) -> Result<(), Self::Error> {
         let len = match msg {
-            IpcMessage::ClientHello => 0,
-            IpcMessage::ServerHello => 0,
-            IpcMessage::ClientBye => 0,
+            IpcMessage::ClientHello | IpcMessage::ServerHello | IpcMessage::ClientBye => 0,
             IpcMessage::RequestAuthentication(ref user, ref secret) => user.len() + secret.len() + 8,
             _   => return Err(IpcError::UnknownMessageType)
         };
@@ -48,15 +46,12 @@ impl Encoder for IpcMessageCodec {
         buf.extend(msg.message_type());
         buf.put_u32::<BigEndian>(len as u32);
 
-        match msg {
-            IpcMessage::RequestAuthentication(ref user, ref secret) => {
-                buf.put_u32::<BigEndian>(user.len() as u32);
-                buf.extend(user.as_bytes());
-                buf.put_u32::<BigEndian>(secret.len() as u32);
-                buf.extend(secret.as_bytes());
-            },
-            _   => ()
-        };
+        if let IpcMessage::RequestAuthentication(ref user, ref secret) = msg {
+            buf.put_u32::<BigEndian>(user.len() as u32);
+            buf.extend(user.as_bytes());
+            buf.put_u32::<BigEndian>(secret.len() as u32);
+            buf.extend(secret.as_bytes());
+        }
 
         Ok(())
     }
