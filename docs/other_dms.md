@@ -30,6 +30,8 @@
 ## GDM
 
 ### General
+- Wayland progress: https://wiki.gnome.org/Initiatives/Wayland/gdm
+
 
 ### Daemon - `main`
 - block sigusr1
