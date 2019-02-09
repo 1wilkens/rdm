@@ -1,5 +1,5 @@
-use bytes::{BufMut, BytesMut, BigEndian};
-use tokio_io::codec::{Encoder, Decoder};
+use bytes::{BufMut, BytesMut};
+use tokio::codec::{Decoder, Encoder};
 
 pub use super::error::IpcError;
 
@@ -11,7 +11,7 @@ pub enum IpcMessage {
     ClientHello,
     ServerHello,
     ClientBye,
-    RequestAuthentication(String, String)
+    RequestAuthentication(String, String),
 }
 
 #[derive(Debug)]
@@ -25,7 +25,7 @@ impl IpcMessage {
             IpcMessage::ClientHello => b"CH",
             IpcMessage::ServerHello => b"SH",
             IpcMessage::ClientBye => b"CB",
-            IpcMessage::RequestAuthentication(ref _a, ref _b) => b"RA"
+            IpcMessage::RequestAuthentication(ref _a, ref _b) => b"RA",
         }
     }
 }
@@ -37,19 +37,21 @@ impl Encoder for IpcMessageCodec {
     fn encode(&mut self, msg: Self::Item, buf: &mut BytesMut) -> Result<(), Self::Error> {
         let len = match msg {
             IpcMessage::ClientHello | IpcMessage::ServerHello | IpcMessage::ClientBye => 0,
-            IpcMessage::RequestAuthentication(ref user, ref secret) => user.len() + secret.len() + 8,
-            _   => return Err(IpcError::UnknownMessageType)
+            IpcMessage::RequestAuthentication(ref user, ref secret) => {
+                user.len() + secret.len() + 8
+            }
+            _ => return Err(IpcError::UnknownMessageType),
         };
 
         buf.reserve(HEADER_SIZE + len);
-        buf.put_i16::<BigEndian>(MAGIC);
+        buf.put_i16_be(MAGIC);
         buf.extend(msg.message_type());
-        buf.put_u32::<BigEndian>(len as u32);
+        buf.put_u32_be(len as u32);
 
         if let IpcMessage::RequestAuthentication(ref user, ref secret) = msg {
-            buf.put_u32::<BigEndian>(user.len() as u32);
+            buf.put_u32_be(user.len() as u32);
             buf.extend(user.as_bytes());
-            buf.put_u32::<BigEndian>(secret.len() as u32);
+            buf.put_u32_be(secret.len() as u32);
             buf.extend(secret.as_bytes());
         }
 
@@ -64,11 +66,11 @@ impl Decoder for IpcMessageCodec {
     fn decode(&mut self, buf: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
         match decode(buf, 0) {
             Ok(None) => Ok(None),
-            Ok(Some((item ,pos))) => {
+            Ok(Some((item, pos))) => {
                 buf.split_to(pos);
                 Ok(Some(item))
             }
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 }
@@ -93,6 +95,6 @@ fn decode(buf: &mut BytesMut, idx: usize) -> DecodeResult {
         b"CH" => Ok(Some((IpcMessage::ClientHello, idx + HEADER_SIZE))),
         b"SH" => Ok(Some((IpcMessage::ServerHello, idx + HEADER_SIZE))),
         b"CB" => Ok(Some((IpcMessage::ClientBye, idx + HEADER_SIZE))),
-        _ => Err(IpcError::UnknownMessageType)
+        _ => Err(IpcError::UnknownMessageType),
     }
 }

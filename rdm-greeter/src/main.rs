@@ -1,3 +1,5 @@
+#![feature(futures_api, async_await, await_macro)]
+
 #[macro_use]
 extern crate slog;
 
@@ -20,21 +22,23 @@ fn setup_logger() -> Logger {
 }
 
 fn main() {
-    let log = setup_logger();
+    tokio::run_async(async {
+        let log = setup_logger();
 
-    let _greeter = rdmgreeter::RdmGreeter::new(log.clone()).expect("Failed to get greeter");
-    debug!(&log, "[main] Got greeter! Press any key to to continue");
-    let mut res = String::new();
-    let _c = stdin().read_line(&mut res);
-    return;
+        let _greeter = await!(rdmgreeter::RdmGreeter::new(log.clone())).expect("Failed to get greeter");
+        debug!(&log, "[main] Got greeter! Press any key to to continue");
+        let mut res = String::new();
+        let _c = stdin().read_line(&mut res);
+        return;
 
-    // Init gtk
-    (::gtk::init()).expect("Failed to initialize gtk");
+        // Init gtk
+        (::gtk::init()).expect("Failed to initialize gtk");
 
-    // Setup the Ui
-    /*let mut ui = ui::Ui::from_theme(constants::THEME_NAME_DEFAULT, greeter);
-    ui.show();*/
+        // Setup the Ui
+        /*let mut ui = ui::Ui::from_theme(constants::THEME_NAME_DEFAULT, greeter);
+        ui.show();*/
 
-    // Start gtk event loop
-    ::gtk::main();
+        // Start gtk event loop
+        ::gtk::main();
+    });
 }

@@ -1,3 +1,7 @@
+use slog::Logger;
+use tokio::net::UnixListener;
+use tokio::prelude::*;
+
 use std::io::{self, Read, Write};
 use std::net::Shutdown;
 use std::os::unix::io::{AsRawFd, FromRawFd};
@@ -6,35 +10,22 @@ use std::thread;
 
 use rdmcommon::{ipc, util};
 
-use futures::{future, Future, Sink, Stream};
-use slog::Logger;
-use tokio_core::reactor::{Core, Handle};
-use tokio_io::AsyncRead;
-use tokio_service::{NewService, Service};
-use tokio_uds::UnixListener;
+pub struct IpcService(Logger);
 
 pub struct IpcManager {
     log: Logger,
     listener: UnixListener,
-    handle: Handle,
 }
 
-pub struct IpcService(Logger);
-
 impl IpcManager {
-    pub fn new<L: Into<Option<Logger>>>(
-        logger: L,
-        handle: &Handle,
-    ) -> Result<IpcManager, ipc::IpcError> {
+    pub fn new<L: Into<Option<Logger>>>(logger: L) -> Result<IpcManager, ipc::IpcError> {
         let log = logger.into().unwrap_or_else(util::plain_logger);
-        let handle = handle.clone();
 
         debug!(log, "[IpcManager::new] Binding server socket");
-        let listener = UnixListener::bind("/home/florian/tmp/sock", &handle)?;
+        let listener = UnixListener::bind("/home/florian/tmp/sock")?;
         Ok(IpcManager {
             log: log,
             listener: listener,
-            handle: handle,
         })
     }
 
@@ -68,7 +59,7 @@ impl IpcService {
     }
 }
 
-impl Service for IpcService {
+/*impl Service for IpcService {
     type Request = ipc::IpcMessage;
     type Response = ipc::IpcMessage;
     type Error = ipc::IpcError;
@@ -108,4 +99,4 @@ where
     });
 
     core.run(srv).map_err(ipc::IpcError::from)
-}
+}*/

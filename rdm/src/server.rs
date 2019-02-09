@@ -7,14 +7,18 @@ use std::thread;
 use std::time::Duration;
 
 use libc::{close, pipe};
-use rand::Rng;
-use uuid::Uuid;
+use rand::{seq::SliceRandom, thread_rng};
+use uuid::{
+    adapter::{Hyphenated, Simple},
+    Uuid,
+};
 
 use crate::constants::*;
 
 // TODO: This should really be simpler I think
-const HEX_CHARS: [char; 16] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c',
-                               'd', 'e', 'f'];
+const HEX_CHARS: [char; 16] = [
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
+];
 
 pub struct Xserver {
     auth_cookie: String,
@@ -63,8 +67,8 @@ impl Xserver {
         if let Some(ref mut p) = self.process {
             //info!("[X]: Killing X with PID={}", p.id());
             match p.kill() {
-                Ok(_res) => {},//info!("[X]: Killed X with Result={:?}", res),
-                Err(_err) => {}, //error!("[X]: Failed to kill X: {}", err),
+                Ok(_res) => {}  //info!("[X]: Killed X with Result={:?}", res),
+                Err(_err) => {} //error!("[X]: Failed to kill X: {}", err),
             };
 
             p.wait().expect("[X]: Failed to wait for stopped X server!");
@@ -76,7 +80,7 @@ impl Xserver {
             Some(ref f) => {
                 match fs::remove_file(&f) {
                     Ok(_) => {}
-                    Err(_e) => {},//info!("Failed to delete x auth file: {}", e),
+                    Err(_e) => {} //info!("Failed to delete x auth file: {}", e),
                 }
             }
         }
@@ -100,7 +104,8 @@ impl Xserver {
 
         if let Some(ref mut pipe) = auth.stdin {
             pipe.write_all(b"remove :0\n").unwrap();
-            pipe.write_all(format!("add :0 . {}\n", self.auth_cookie).as_bytes()).unwrap();
+            pipe.write_all(format!("add :0 . {}\n", self.auth_cookie).as_bytes())
+                .unwrap();
             pipe.write_all(b"exit\n").unwrap();
             pipe.flush().expect("[X]: Failed to flush xauth pipe!");
         }
@@ -154,7 +159,7 @@ impl Xserver {
         pipe.read_to_string(&mut display)
             .expect("[X]: Failed to read DISPLAY from X!");
         // TODO: This allocates twice but we mostly deal with "0" so it shouldn't be a problem
-        let display = format!(":{}", display.trim_right());
+        let display = format!(":{}", display.trim_end());
         env::set_var("DISPLAY", &display);
         //debug!("[ui]: Got DISPLAY from X and set the env var: {}", &display);
         self.display = Some(display);
@@ -176,16 +181,8 @@ impl Drop for Xserver {
 fn generate_cookie() -> String {
     //info!("[X]: Generating auth cookie");
 
-    // TODO: replace this with another uuid?
-    let mut cookie = String::with_capacity(32);
-    let mut rng = ::rand::StdRng::new().expect("[X]: Failed to get rng for cookie generation!");
-
-    while cookie.len() < 32 {
-        cookie.push(*rng.choose(&HEX_CHARS).unwrap());
-    }
-
-    //debug!("[X]: Generated cookie: {}", &cookie);
-    cookie
+    // We use an uuid in 'simple' format aka 32 random chars
+    Simple::from_uuid(Uuid::new_v4()).to_string()
 }
 
 // Generate an auth file based on the run dir and a new uuid and touch it
@@ -194,9 +191,13 @@ fn touch_auth_file() -> String {
 
     let uuid = Uuid::new_v4();
     let mut path = PathBuf::from(DEFAULT_RUN_DIR);
-    path.push(uuid.hyphenated().to_string());
+    path.push(Hyphenated::from_uuid(uuid).to_string());
 
-    match fs::OpenOptions::new().write(true).create_new(true).open(&path) {
+    match fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&path)
+    {
         Ok(_) => {}
         Err(e) => panic!("[X]: Failed to touch X auth file: {}!", e),
     }

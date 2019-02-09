@@ -1,29 +1,31 @@
+#![feature(futures_api, async_await, await_macro)]
 #![allow(clippy::redundant_field_names)]
 
 #[macro_use]
 extern crate slog;
 
+#[macro_use]
+extern crate tokio;
+
+use slog::Logger;
+use tokio::codec::Decoder;
+use tokio::net::UnixStream;
+use tokio::prelude::*;
+
 use std::io;
 
-use rdmcommon::ipc;
+use rdmcommon::ipc::{IpcError, IpcMessage, IpcMessageCodec};
 use rdmcommon::util;
-
-use futures::{Future, Sink, Stream};
-use slog::Logger;
-use tokio_core::reactor::Core;
-use tokio_io::AsyncRead;
-use tokio_uds::UnixStream;
 
 pub struct RdmGreeter {
     log: Logger,
-    core: Core,
-    receiver: Box<Stream<Item = ipc::IpcMessage, Error = ipc::IpcError>>,
-    sender: Box<Sink<SinkItem = ipc::IpcMessage, SinkError = ipc::IpcError>>,
+    receiver: Box<Stream<Item = IpcMessage, Error = IpcError>>,
+    sender: Box<Sink<SinkItem = IpcMessage, SinkError = IpcError>>,
 }
 
 #[derive(Debug)]
 pub enum RdmGreeterError {
-    Ipc(ipc::IpcError),
+    Ipc(IpcError),
     Io(io::Error),
     FailedHandshake,
 }
@@ -34,32 +36,29 @@ impl From<io::Error> for RdmGreeterError {
     }
 }
 
-impl From<ipc::IpcError> for RdmGreeterError {
-    fn from(err: ipc::IpcError) -> RdmGreeterError {
+impl From<IpcError> for RdmGreeterError {
+    fn from(err: IpcError) -> RdmGreeterError {
         RdmGreeterError::Ipc(err)
     }
 }
 
 impl RdmGreeter {
-    pub fn new<L: Into<Option<Logger>>>(logger: L) -> Result<RdmGreeter, RdmGreeterError> {
+    pub async fn new<L: Into<Option<Logger>>>(logger: L) -> Result<RdmGreeter, RdmGreeterError> {
         let log = logger.into().unwrap_or_else(util::plain_logger);
-        let mut core = Core::new()?;
-        let handle = core.handle();
-        // TODO: move this into private fn
         debug!(log, "[RdmGreeter::new] Connecting server socket");
-        let sock = UnixStream::connect("/home/florian/tmp/sock", &handle)?;
-        let (tx, rx) = sock.framed(ipc::IpcMessageCodec).split();
+        let codec = IpcMessageCodec;
+        let sock = await!(UnixStream::connect("/home/florian/tmp/sock"))?;
+        let (tx, rx) = codec.framed(sock).split();
 
         debug!(log, "[RdmGreeter::new] Sending ClientHello");
-        let tx = core.run(tx.send(ipc::IpcMessage::ClientHello))?;
+        let tx = await!(tx.send(IpcMessage::ClientHello))?;
 
         debug!(log, "[RdmGreeter::new] Reading server response");
-        let (resp, rx) = core.run(rx.take(1).into_future().map_err(|(err, _)| err))?;
+        let (resp, rx) = await!(rx.take(1).into_future().map_err(|(err, _)| err))?;
         debug!(log, "[RdmGreeter::new] Got server response"; "response" => ?resp);
 
         match resp {
-            Some(ipc::IpcMessage::ServerHello) => Ok(RdmGreeter {
-                core: core,
+            Some(IpcMessage::ServerHello) => Ok(RdmGreeter {
                 receiver: Box::new(rx),
                 sender: Box::new(tx),
                 log: log,

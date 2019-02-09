@@ -1,3 +1,4 @@
+#![feature(futures_api, async_await, await_macro)]
 #![allow(unused_imports, dead_code)]
 #![allow(clippy::useless_format, clippy::redundant_field_names)]
 
@@ -5,6 +6,9 @@
 extern crate clap;
 #[macro_use]
 extern crate slog;
+
+#[macro_use]
+extern crate tokio;
 
 mod common;
 mod constants;
