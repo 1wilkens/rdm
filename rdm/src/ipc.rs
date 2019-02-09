@@ -1,16 +1,16 @@
 use std::io::{self, Read, Write};
-use std::net::{Shutdown};
+use std::net::Shutdown;
 use std::os::unix::io::{AsRawFd, FromRawFd};
 use std::sync::Arc;
 use std::thread;
 
 use rdmcommon::{ipc, util};
 
-use futures::{future, Future, Stream, Sink};
+use futures::{future, Future, Sink, Stream};
 use slog::Logger;
 use tokio_core::reactor::{Core, Handle};
 use tokio_io::AsyncRead;
-use tokio_service::{Service, NewService};
+use tokio_service::{NewService, Service};
 use tokio_uds::UnixListener;
 
 pub struct IpcManager {
@@ -22,13 +22,20 @@ pub struct IpcManager {
 pub struct IpcService(Logger);
 
 impl IpcManager {
-    pub fn new<L : Into<Option<Logger>>>(logger: L, handle: &Handle) -> Result<IpcManager, ipc::IpcError> {
-        let log = logger.into().unwrap_or(util::plain_logger());
+    pub fn new<L: Into<Option<Logger>>>(
+        logger: L,
+        handle: &Handle,
+    ) -> Result<IpcManager, ipc::IpcError> {
+        let log = logger.into().unwrap_or_else(util::plain_logger);
         let handle = handle.clone();
 
         debug!(log, "[IpcManager::new] Binding server socket");
         let listener = UnixListener::bind("/home/florian/tmp/sock", &handle)?;
-        Ok(IpcManager {log: log, listener: listener, handle: handle})
+        Ok(IpcManager {
+            log: log,
+            listener: listener,
+            handle: handle,
+        })
     }
 
     /*pub fn run<S>(&mut self, new_service: S, core: Core)
@@ -55,8 +62,8 @@ impl IpcManager {
 }
 
 impl IpcService {
-    pub fn new<L : Into<Option<Logger>>>(logger: L) -> IpcService {
-        let log = logger.into().unwrap_or(util::plain_logger());
+    pub fn new<L: Into<Option<Logger>>>(logger: L) -> IpcService {
+        let log = logger.into().unwrap_or_else(util::plain_logger);
         IpcService(log)
     }
 }
@@ -71,20 +78,21 @@ impl Service for IpcService {
         debug!(self.0, "[IpcService::call] Received message"; "msg" => ?msg);
         match msg {
             ipc::IpcMessage::ClientHello => Box::new(future::ok(ipc::IpcMessage::ServerHello)),
-            _   => Box::new(future::err(ipc::IpcError::UnknownMessageType))
+            _ => Box::new(future::err(ipc::IpcError::UnknownMessageType)),
         }
     }
 }
 
 pub fn serve<S>(s: S) -> Result<(), ipc::IpcError>
-    where S: NewService<Request = ipc::IpcMessage,
-                        Response = ipc::IpcMessage,
-                        Error = ipc::IpcError> + 'static
+where
+    S: NewService<Request = ipc::IpcMessage, Response = ipc::IpcMessage, Error = ipc::IpcError>
+        + 'static,
 {
     let mut core = Core::new()?;
     let handle = core.handle();
 
-    let listener = UnixListener::bind("/home/florian/tmp/sock", &handle).expect("[serve] Failed to bind socket");
+    let listener = UnixListener::bind("/home/florian/tmp/sock", &handle)
+        .expect("[serve] Failed to bind socket");
 
     let connections = listener.incoming();
     let srv = connections.for_each(move |(socket, _peer_addr)| {
@@ -93,12 +101,11 @@ pub fn serve<S>(s: S) -> Result<(), ipc::IpcError>
         let service = s.new_service()?;
 
         let responses = reader.and_then(move |req| service.call(req));
-        let server = writer.send_all(responses)
-            .then(|_| Ok(()));
+        let server = writer.send_all(responses).then(|_| Ok(()));
         handle.spawn(server);
 
         Ok(())
     });
 
-    core.run(srv).map_err(|err| ipc::IpcError::from(err))
+    core.run(srv).map_err(ipc::IpcError::from)
 }

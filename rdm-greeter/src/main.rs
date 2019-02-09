@@ -1,20 +1,10 @@
-extern crate rdmcommon;
-extern crate rdmgreeter;
-
 #[macro_use]
 extern crate slog;
-extern crate slog_async;
-extern crate slog_term;
-
-extern crate gdk;
-extern crate gdk_pixbuf;
-extern crate gtk;
 
 mod constants;
 mod ui;
 
-use std::rc::Rc;
-use std::sync::Mutex;
+use std::{io::stdin, rc::Rc, sync::Mutex};
 
 use slog::{Drain, Logger};
 use slog_async::Async;
@@ -32,10 +22,10 @@ fn setup_logger() -> Logger {
 fn main() {
     let log = setup_logger();
 
-    let mut greeter = rdmgreeter::RdmGreeter::new(log.clone()).expect("Failed to get greeter");
+    let _greeter = rdmgreeter::RdmGreeter::new(log.clone()).expect("Failed to get greeter");
     debug!(&log, "[main] Got greeter! Press any key to to continue");
     let mut res = String::new();
-    let mut c = ::std::io::stdin().read_line(&mut res);
+    let _c = stdin().read_line(&mut res);
     return;
 
     // Init gtk

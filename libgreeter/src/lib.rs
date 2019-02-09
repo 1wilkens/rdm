@@ -1,19 +1,14 @@
+#![allow(clippy::redundant_field_names)]
+
 #[macro_use]
 extern crate slog;
-
-extern crate futures;
-extern crate tokio_core;
-extern crate tokio_io;
-extern crate tokio_uds;
-
-extern crate rdmcommon;
 
 use std::io;
 
 use rdmcommon::ipc;
 use rdmcommon::util;
 
-use futures::{Future, Stream, Sink};
+use futures::{Future, Sink, Stream};
 use slog::Logger;
 use tokio_core::reactor::Core;
 use tokio_io::AsyncRead;
@@ -30,7 +25,7 @@ pub struct RdmGreeter {
 pub enum RdmGreeterError {
     Ipc(ipc::IpcError),
     Io(io::Error),
-    FailedHandshake
+    FailedHandshake,
 }
 
 impl From<io::Error> for RdmGreeterError {
@@ -46,7 +41,7 @@ impl From<ipc::IpcError> for RdmGreeterError {
 }
 
 impl RdmGreeter {
-    pub fn new<L : Into<Option<Logger>>>(logger: L) -> Result<RdmGreeter, RdmGreeterError> {
+    pub fn new<L: Into<Option<Logger>>>(logger: L) -> Result<RdmGreeter, RdmGreeterError> {
         let log = logger.into().unwrap_or_else(util::plain_logger);
         let mut core = Core::new()?;
         let handle = core.handle();
@@ -64,12 +59,12 @@ impl RdmGreeter {
 
         match resp {
             Some(ipc::IpcMessage::ServerHello) => Ok(RdmGreeter {
-                                                        core: core,
-                                                        receiver: Box::new(rx),
-                                                        sender: Box::new(tx),
-                                                        log: log,
-                                                  }),
-            _ => Err(RdmGreeterError::FailedHandshake)
+                core: core,
+                receiver: Box::new(rx),
+                sender: Box::new(tx),
+                log: log,
+            }),
+            _ => Err(RdmGreeterError::FailedHandshake),
         }
     }
 }

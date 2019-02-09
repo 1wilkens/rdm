@@ -1,4 +1,4 @@
-use seat::Seat;
+use crate::seat::Seat;
 
 #[derive(Debug)]
 pub struct SeatManager {

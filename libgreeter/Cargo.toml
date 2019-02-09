@@ -7,10 +7,12 @@ repository = "https://github.com/1wilkens/rdm"
 readme = "README.md"
 license = "MIT"
 
+edition = "2018"
+
 [dependencies]
 slog = "2.0"
 
-futures = "0.1"
+futures = "^0.1"
 tokio-core = "0.1"
 tokio-io = "0.1"
 tokio-uds = "0.1"

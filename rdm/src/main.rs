@@ -1,32 +1,10 @@
-#![feature(conservative_impl_trait)]
 #![allow(unused_imports, dead_code)]
-#![allow(useless_format)]
+#![allow(clippy::useless_format, clippy::redundant_field_names)]
 
 #[macro_use]
 extern crate clap;
 #[macro_use]
 extern crate slog;
-extern crate slog_async;
-extern crate slog_term;
-
-extern crate dbus;
-extern crate libc;
-
-extern crate pam_auth;
-extern crate users;
-
-extern crate rand;
-extern crate uuid;
-
-extern crate rdmcommon;
-
-extern crate futures;
-extern crate tokio_core;
-extern crate tokio_io;
-extern crate tokio_service;
-//extern crate tokio_proto;
-extern crate tokio_uds;
-//extern crate tokio_uds_proto;
 
 mod common;
 mod constants;
@@ -40,18 +18,18 @@ mod session;
 
 mod login1;
 
-use constants::*;
+use crate::constants::*;
 
 use std::io::{Read, Write};
-use std::process::{Child, Command, exit};
+use std::process::{exit, Child, Command};
 
 use clap::{App, Arg, ArgMatches};
 use slog::{Drain, Logger};
 use slog_async::Async;
 use slog_term::{FullFormat, TermDecorator};
 
+use crate::login1::OrgFreedesktopLogin1Manager;
 use dbus::{BusType, Connection, ConnectionItem, Error, Message, MessageItem, NameFlag};
-use login1::OrgFreedesktopLogin1Manager;
 
 fn test_dbus(log: &Logger) {
     let conn = match Connection::get_private(BusType::System) {
@@ -67,10 +45,10 @@ fn test_dbus(log: &Logger) {
     }
 }
 
-fn run(matches: ArgMatches) -> Result<(), String> {
+fn run(_matches: ArgMatches) -> Result<(), String> {
     let log = setup_logger();
 
-    let mut display_mgr = displaymanager::DisplayManager::new();
+    let _display_mgr = displaymanager::DisplayManager::new();
     let mut seat_mgr = seatmanager::SeatManager::new();
     seat_mgr.add_seat("seat0");
 
@@ -95,13 +73,15 @@ fn main() {
     let matches = App::new("rdm")
         .version("0.1")
         .about("Rust Display Manager (working title)")
-        .arg(Arg::with_name("verbose")
-            .short("v")
-            .long("verbose")
-            .help("Enable verbose output"))
+        .arg(
+            Arg::with_name("verbose")
+                .short("v")
+                .long("verbose")
+                .help("Enable verbose output"),
+        )
         .get_matches();
 
-    if let Err(e) = run(matches) {
+    if let Err(_e) = run(matches) {
         //error!("Application error: {}", e);
         std::process::exit(1);
     }

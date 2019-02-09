@@ -10,7 +10,7 @@ use libc::{close, pipe};
 use rand::Rng;
 use uuid::Uuid;
 
-use constants::*;
+use crate::constants::*;
 
 // TODO: This should really be simpler I think
 const HEX_CHARS: [char; 16] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c',
@@ -63,8 +63,8 @@ impl Xserver {
         if let Some(ref mut p) = self.process {
             //info!("[X]: Killing X with PID={}", p.id());
             match p.kill() {
-                Ok(res) => {},//info!("[X]: Killed X with Result={:?}", res),
-                Err(err) => {}, //error!("[X]: Failed to kill X: {}", err),
+                Ok(_res) => {},//info!("[X]: Killed X with Result={:?}", res),
+                Err(_err) => {}, //error!("[X]: Failed to kill X: {}", err),
             };
 
             p.wait().expect("[X]: Failed to wait for stopped X server!");
@@ -76,7 +76,7 @@ impl Xserver {
             Some(ref f) => {
                 match fs::remove_file(&f) {
                     Ok(_) => {}
-                    Err(e) => {},//info!("Failed to delete x auth file: {}", e),
+                    Err(_e) => {},//info!("Failed to delete x auth file: {}", e),
                 }
             }
         }
@@ -120,7 +120,7 @@ impl Xserver {
             panic!("[X]: Failed to open pipes to start X!");
         }
 
-        let auth_file = match self.auth_file {
+        let _auth_file = match self.auth_file {
             Some(ref f) => f,
             None => panic!("[X]: Cannot start X without an auth file!"),
         };
