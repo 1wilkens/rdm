@@ -14,7 +14,7 @@ slog = "2.0"
 slog-async = "2.0"
 slog-term = "2.0"
 
-tokio = { version = "^0.1", feature = ["async-await-preview"] }
+tokio = { version = "^0.1" }
 
 rdmcommon = { path = "../libcommon" }
 rdmgreeter = { path = "../libgreeter" }

@@ -1,4 +1,4 @@
-#![feature(futures_api, async_await, await_macro)]
+#![feature(async_await)]
 #![allow(unused_imports, dead_code)]
 #![allow(clippy::useless_format, clippy::redundant_field_names)]
 

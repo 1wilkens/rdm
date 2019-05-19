@@ -12,7 +12,7 @@ edition = "2018"
 [dependencies]
 rdmcommon = { path = "../libcommon"}
 
-tokio = { version = "^0.1", features = ["async-await-preview"] }
+tokio = { version = "^0.1" }
 tokio-service = "^0.1"
 
 slog = "2.0"

@@ -1,10 +1,9 @@
-#![feature(futures_api, async_await, await_macro)]
+#![feature(async_await)]
 #![allow(clippy::redundant_field_names)]
 
 #[macro_use]
 extern crate slog;
 
-#[macro_use]
 extern crate tokio;
 
 use slog::Logger;
@@ -44,17 +43,18 @@ impl From<IpcError> for RdmGreeterError {
 
 impl RdmGreeter {
     pub async fn new<L: Into<Option<Logger>>>(logger: L) -> Result<RdmGreeter, RdmGreeterError> {
-        let log = logger.into().unwrap_or_else(util::plain_logger);
+        // XXX: Reenable this when tokio-async-await is updated
+        /*let log = logger.into().unwrap_or_else(util::plain_logger);
         debug!(log, "[RdmGreeter::new] Connecting server socket");
         let codec = IpcMessageCodec;
-        let sock = await!(UnixStream::connect("/home/florian/tmp/sock"))?;
+        let sock = UnixStream::connect("/home/florian/tmp/sock").await?;
         let (tx, rx) = codec.framed(sock).split();
 
         debug!(log, "[RdmGreeter::new] Sending ClientHello");
-        let tx = await!(tx.send(IpcMessage::ClientHello))?;
+        let tx = tx.send(IpcMessage::ClientHello).await?;
 
         debug!(log, "[RdmGreeter::new] Reading server response");
-        let (resp, rx) = await!(rx.take(1).into_future().map_err(|(err, _)| err))?;
+        let (resp, rx) = rx.take(1).into_future().map_err(|(err, _)| err).await?;
         debug!(log, "[RdmGreeter::new] Got server response"; "response" => ?resp);
 
         match resp {
@@ -64,7 +64,8 @@ impl RdmGreeter {
                 log: log,
             }),
             _ => Err(RdmGreeterError::FailedHandshake),
-        }
+        }*/
+        Err(RdmGreeterError::FailedHandshake)
     }
 }
 

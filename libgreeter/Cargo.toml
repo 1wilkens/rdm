@@ -13,7 +13,7 @@ edition = "2018"
 slog = "2.0"
 
 futures = "^0.1"
-tokio = { version = "^0.1", features = ["async-await-preview"] }
+tokio = { version = "^0.1" }
 tokio-uds = "^0.2"
 
 rdmcommon = { path = "../libcommon"}

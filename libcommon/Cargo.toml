@@ -16,4 +16,4 @@ slog-term = "2.0"
 bytes = "^0.4"
 #byteorder = "1.1.0"
 futures = "^0.1"
-tokio = { version = "^0.1", features = ["async-await-preview"] }
+tokio = { version = "^0.1" }
