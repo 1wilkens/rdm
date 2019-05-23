@@ -75,8 +75,9 @@ fn setup_logger() -> Logger {
 
 fn main() {
     let matches = App::new("rdm")
-        .version("0.1")
-        .about("Rust Display Manager (working title)")
+        .version(clap::crate_version!())
+        .author(clap::crate_authors!())
+        .about(clap::crate_description!())
         .arg(
             Arg::with_name("verbose")
                 .short("v")
