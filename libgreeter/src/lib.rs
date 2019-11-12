@@ -1,4 +1,3 @@
-#![feature(async_await)]
 #![allow(clippy::redundant_field_names)]
 
 #[macro_use]
