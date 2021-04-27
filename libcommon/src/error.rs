@@ -7,7 +7,7 @@ pub enum IpcError {
     IO(io::Error),
     HeaderTooShort,
     InvalidMagic,
-    UnknownMessageType
+    UnknownMessageType,
 }
 
 impl Error for IpcError {
@@ -15,10 +15,10 @@ impl Error for IpcError {
         "test"
     }
 
-    fn cause(&self) -> Option<&Error> {
+    fn cause(&self) -> Option<&(dyn Error)> {
         match *self {
             IpcError::IO(ref err) => Some(err),
-            _   => None
+            _ => None,
         }
     }
 }
@@ -30,7 +30,7 @@ impl From<io::Error> for IpcError {
 }
 
 impl fmt::Display for IpcError {
-    fn fmt(&self, f: &mut fmt::Formatter) ->  fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "test")
     }
 }

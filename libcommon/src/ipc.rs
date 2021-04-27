@@ -1,5 +1,5 @@
-use bytes::{BufMut, BytesMut};
-use tokio::codec::{Decoder, Encoder};
+use bytes::{Buf, BufMut, BytesMut};
+use tokio_util::codec::{Decoder, Encoder};
 
 pub use super::error::IpcError;
 
@@ -30,11 +30,10 @@ impl IpcMessage {
     }
 }
 
-impl Encoder for IpcMessageCodec {
-    type Item = IpcMessage;
+impl Encoder<IpcMessage> for IpcMessageCodec {
     type Error = IpcError;
 
-    fn encode(&mut self, msg: Self::Item, buf: &mut BytesMut) -> Result<(), Self::Error> {
+    fn encode(&mut self, msg: IpcMessage, dst: &mut BytesMut) -> Result<(), Self::Error> {
         let len = match msg {
             IpcMessage::ClientHello | IpcMessage::ServerHello | IpcMessage::ClientBye => 0,
             IpcMessage::RequestAuthentication(ref user, ref secret) => {
@@ -43,16 +42,16 @@ impl Encoder for IpcMessageCodec {
             _ => return Err(IpcError::UnknownMessageType),
         };
 
-        buf.reserve(HEADER_SIZE + len);
-        buf.put_i16_be(MAGIC);
-        buf.extend(msg.message_type());
-        buf.put_u32_be(len as u32);
+        dst.reserve(HEADER_SIZE + len);
+        dst.put_i16(MAGIC);
+        dst.extend(msg.message_type());
+        dst.put_u32(len as u32);
 
         if let IpcMessage::RequestAuthentication(ref user, ref secret) = msg {
-            buf.put_u32_be(user.len() as u32);
-            buf.extend(user.as_bytes());
-            buf.put_u32_be(secret.len() as u32);
-            buf.extend(secret.as_bytes());
+            dst.put_u32(user.len() as u32);
+            dst.extend(user.as_bytes());
+            dst.put_u32(secret.len() as u32);
+            dst.extend(secret.as_bytes());
         }
 
         Ok(())
@@ -67,7 +66,7 @@ impl Decoder for IpcMessageCodec {
         match decode(buf, 0) {
             Ok(None) => Ok(None),
             Ok(Some((item, pos))) => {
-                buf.split_to(pos);
+                buf.advance(pos);
                 Ok(Some(item))
             }
             Err(e) => Err(e),

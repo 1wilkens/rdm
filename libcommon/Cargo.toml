@@ -10,10 +10,10 @@ license = "MIT"
 edition = "2018"
 
 [dependencies]
-slog = "2.0"
-slog-term = "2.0"
+slog = "2.4.1"
+slog-term = "2.4.0"
 
-bytes = "^0.4"
+bytes = "^1.0"
 #byteorder = "1.1.0"
-futures = "^0.1"
-tokio = { version = "^0.1" }
+tokio = "^1.5"
+tokio-util = { version = "^0.6", features = ["codec"]}
