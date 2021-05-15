@@ -8,12 +8,14 @@ use std::time::Duration;
 
 use libc::{close, pipe};
 use rand::{seq::SliceRandom, thread_rng};
+use slog::Logger;
 use uuid::{
     adapter::{Hyphenated, Simple},
     Uuid,
 };
 
 use crate::constants::*;
+use rdmcommon::util;
 
 // TODO: This should really be simpler I think
 const HEX_CHARS: [char; 16] = [
@@ -21,6 +23,7 @@ const HEX_CHARS: [char; 16] = [
 ];
 
 pub struct Xserver {
+    log: Logger,
     auth_cookie: String,
     auth_file: Option<String>,
     process: Option<Child>,
@@ -28,11 +31,15 @@ pub struct Xserver {
 }
 
 impl Xserver {
-    pub fn new() -> Xserver {
-        let cookie = generate_cookie();
-        let file = touch_auth_file();
+    pub fn new<L: Into<Option<Logger>>>(logger: L) -> Self {
+        let log = logger.into().unwrap_or_else(util::plain_logger);
+
+        let cookie = generate_cookie(&log);
+        debug!(log, "[Xserver::new] Generated auth cookie: {}", &cookie);
+        let file = touch_auth_file(&log);
 
         Xserver {
+            log: log,
             auth_cookie: cookie,
             auth_file: Some(file),
             process: None,
@@ -41,7 +48,7 @@ impl Xserver {
     }
 
     pub fn start(&mut self) {
-        //info!("[X]: start()");
+        info!(&self.log, "[X]: start()");
 
         if TESTING {
             // In TESTING mode we don't start X
@@ -60,12 +67,12 @@ impl Xserver {
     }
 
     pub fn stop(&mut self) {
-        //info!("[X]: stop()");
+        info!(&self.log, "[X]: stop()");
 
         // TODO: There is probably more to do here
         // Kill X process
         if let Some(ref mut p) = self.process {
-            //info!("[X]: Killing X with PID={}", p.id());
+            info!(&self.log, "[X]: Killing X with PID={}", p.id());
             match p.kill() {
                 Ok(_res) => {}  //info!("[X]: Killed X with Result={:?}", res),
                 Err(_err) => {} //error!("[X]: Failed to kill X: {}", err),
@@ -88,7 +95,7 @@ impl Xserver {
     }
 
     fn set_cookie(&self) {
-        //info!("[X]: Setting auth cookie");
+        info!(&self.log, "[X]: Setting auth cookie");
 
         let auth_file = match self.auth_file {
             Some(ref f) => f,
@@ -113,7 +120,7 @@ impl Xserver {
         // Wait on xauth to prevent zombie processes
         auth.wait().expect("[X]: Failed to wait on xauth process!");
 
-        //info!("[X]: Auth cookie set");
+        info!(&self.log, "[X]: Auth cookie set");
     }
 
     fn start_x_process(&mut self) {
@@ -137,7 +144,7 @@ impl Xserver {
             .arg(&fds[1].to_string())
             .arg(X_DEFAULT_VT)
             //.arg(X_ARG_AUTH)
-            //.arg(auth_file)
+            //.arg(_auth_file)
             // Output redirection
             .stdout(Stdio::null())
             .stderr(Stdio::null())
@@ -146,9 +153,9 @@ impl Xserver {
         self.process = Some(child);
 
         // Wait 1 second for X to start
-        //info!("[X]: Started X.. Sleeping 1 second");
+        info!(&self.log, "[X]: Started X.. Sleeping 1 second");
         thread::sleep(Duration::from_millis(1000));
-        //info!("[X]: Sleep finished");
+        info!(&self.log, "[X]: Sleep finished");
 
         // Close writing end of the pipe
         unsafe { close(fds[1]) };
@@ -161,7 +168,10 @@ impl Xserver {
         // TODO: This allocates twice but we mostly deal with "0" so it shouldn't be a problem
         let display = format!(":{}", display.trim_end());
         env::set_var("DISPLAY", &display);
-        //debug!("[ui]: Got DISPLAY from X and set the env var: {}", &display);
+        debug!(
+            &self.log,
+            "[X]: Got DISPLAY from X and set the env var: {}", &display
+        );
         self.display = Some(display);
 
         // Close reading pipe // TODO: Is this necessary? Investigate
@@ -178,16 +188,16 @@ impl Drop for Xserver {
 }
 
 // Generate an authorization cookie
-fn generate_cookie() -> String {
-    //info!("[X]: Generating auth cookie");
+fn generate_cookie(log: &Logger) -> String {
+    info!(log, "[X]: Generating auth cookie");
 
     // We use an uuid in 'simple' format aka 32 random chars
     Simple::from_uuid(Uuid::new_v4()).to_string()
 }
 
 // Generate an auth file based on the run dir and a new uuid and touch it
-fn touch_auth_file() -> String {
-    //info!("[X]: Generating auth path");
+fn touch_auth_file(log: &Logger) -> String {
+    info!(log, "[X]: Generating auth path");
 
     let uuid = Uuid::new_v4();
     let mut path = PathBuf::from(DEFAULT_RUN_DIR);
@@ -202,6 +212,6 @@ fn touch_auth_file() -> String {
         Err(e) => panic!("[X]: Failed to touch X auth file: {}!", e),
     }
 
-    //debug!("[X]: Generated auth path: {:?}", &path);
+    debug!(log, "[X]: Generated auth file path: {:?}", &path);
     path.to_string_lossy().into_owned()
 }

@@ -12,17 +12,19 @@ edition = "2018"
 [dependencies]
 rdmcommon = { path = "../libcommon"}
 
-tokio = { version = "^0.1" }
-tokio-service = "^0.1"
+futures = "^0.3"
+tokio = { version = "^1.5", features = ["full"] }
+tokio-util = { version = "^0.6", features = ["codec"]}
 
-slog = "2.0"
-slog-async = "2.0"
-slog-term = "2.0"
-clap = "2.29"
+slog = "^2.0"
+slog-async = "^2.0"
+slog-term = "^2.0"
+clap = "^2.29"
 rand = "^0.6"
-uuid = { version = "^0.7", features = [ "v4" ] }
+uuid = { version = "^0.7", features = ["v4"] }
 
-dbus = "^0.6"
+dbus = "^0.9"
+dbus-tokio = "^0.7"
 pam = "^0.7"
 libc = "^0.2"
 users = "^0.8"

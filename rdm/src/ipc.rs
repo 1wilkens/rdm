@@ -1,12 +1,13 @@
-use slog::Logger;
-use tokio::net::UnixListener;
-use tokio::prelude::*;
-
 use std::io::{self, Read, Write};
 use std::net::Shutdown;
 use std::os::unix::io::{AsRawFd, FromRawFd};
 use std::sync::Arc;
 use std::thread;
+
+use futures::prelude::*;
+use slog::Logger;
+use tokio::net::{UnixListener, UnixStream};
+use tokio_util::codec::Framed;
 
 use rdmcommon::{ipc, util};
 
@@ -18,85 +19,43 @@ pub struct IpcManager {
 }
 
 impl IpcManager {
-    pub fn new<L: Into<Option<Logger>>>(logger: L) -> Result<IpcManager, ipc::IpcError> {
+    pub fn new<L: Into<Option<Logger>>>(logger: L) -> Result<Self, ipc::IpcError> {
         let log = logger.into().unwrap_or_else(util::plain_logger);
 
-        debug!(log, "[IpcManager::new] Binding server socket");
+        debug!(log, "[IpcManager::new] Binding IPC socket");
         let listener = UnixListener::bind("/home/florian/tmp/sock")?;
-        Ok(IpcManager {
-            log: log,
-            listener: listener,
-        })
+
+        Ok(IpcManager { log, listener })
     }
 
-    /*pub fn run<S>(&mut self, new_service: S, core: Core)
-        where S: NewService<Request = ipc::IpcMessage,
-                        Response = ipc::IpcMessage,
-                        Error = ipc::IpcError> + 'static
-    {
-        let handle = &self.handle;
-        let listener = &mut self.listener;
-
-        let f = listener.incoming().for_each(|(socket, _peer_addr)| {
-            let (writer, reader) = socket.framed(ipc::IpcMessageCodec).split();
-            let service = new_service.new_service().expect("[IpcManager::run] Failed to call new_service()");
-
-            let responses = reader.and_then(move |req| service.call(req));
-            let handler = writer.send_all(responses)
-                .then(|_| Ok(()));
-
-            handle.spawn(handler);
-
-            Ok(())
-        });
-    }*/
-}
-
-impl IpcService {
-    pub fn new<L: Into<Option<Logger>>>(logger: L) -> IpcService {
-        let log = logger.into().unwrap_or_else(util::plain_logger);
-        IpcService(log)
-    }
-}
-
-/*impl Service for IpcService {
-    type Request = ipc::IpcMessage;
-    type Response = ipc::IpcMessage;
-    type Error = ipc::IpcError;
-    type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
-
-    fn call(&self, msg: Self::Request) -> Self::Future {
-        debug!(self.0, "[IpcService::call] Received message"; "msg" => ?msg);
-        match msg {
-            ipc::IpcMessage::ClientHello => Box::new(future::ok(ipc::IpcMessage::ServerHello)),
-            _ => Box::new(future::err(ipc::IpcError::UnknownMessageType)),
+    pub async fn run(&mut self) -> Result<(), ipc::IpcError> {
+        match self.listener.accept().await {
+            Ok((stream, _addr)) => self.handle(stream).await,
+            Err(e) => {
+                error!(&self.log, "[IpcManager::run] Error accepting unix listener");
+                Err(ipc::IpcError::IO(e))
+            }
         }
     }
+
+    async fn handle(&mut self, stream: UnixStream) -> Result<(), ipc::IpcError> {
+        debug!(&self.log, "[IpcManager::handle] New client");
+        let (mut writer, mut reader) = Framed::new(stream, ipc::IpcMessageCodec).split();
+        let req = match reader.next().await {
+            Some(m) => m,
+            // FIXME: extend IpcError with something like premature termination
+            None => return Ok(()),
+        };
+        let resp = match req? {
+            ipc::IpcMessage::ClientHello => ipc::IpcMessage::ServerHello,
+            _ => return Err(ipc::IpcError::UnknownMessageType),
+        };
+        writer.send(resp).await
+    }
 }
 
-pub fn serve<S>(s: S) -> Result<(), ipc::IpcError>
-where
-    S: NewService<Request = ipc::IpcMessage, Response = ipc::IpcMessage, Error = ipc::IpcError>
-        + 'static,
-{
-    let mut core = Core::new()?;
-    let handle = core.handle();
-
-    let listener = UnixListener::bind("/home/florian/tmp/sock", &handle)
-        .expect("[serve] Failed to bind socket");
-
-    let connections = listener.incoming();
-    let srv = connections.for_each(move |(socket, _peer_addr)| {
-        println!("[serve] Serving new client..");
-        let (writer, reader) = socket.framed(ipc::IpcMessageCodec).split();
-        let service = s.new_service()?;
-
-        let responses = reader.and_then(move |req| service.call(req));
-        let server = writer.send_all(responses).then(|_| Ok(()));
-        handle.spawn(server);
-
-        Ok(())
-    });
-
-    core.run(srv).map_err(ipc::IpcError::from)
-}*/
+impl Drop for IpcManager {
+    fn drop(&mut self) {
+        debug!(&self.log, "Dropping IpcManager");
+    }
+}
