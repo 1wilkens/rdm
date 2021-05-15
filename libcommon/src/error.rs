@@ -30,7 +30,7 @@ impl From<io::Error> for IpcError {
 }
 
 impl fmt::Display for IpcError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "test")
     }
 }
