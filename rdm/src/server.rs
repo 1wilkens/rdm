@@ -35,7 +35,7 @@ impl Xserver {
         let log = logger.into().unwrap_or_else(util::plain_logger);
 
         let cookie = generate_cookie(&log);
-        debug!(log, "[Xserver::new] Generated auth cookie: {}", &cookie);
+        debug!(log, "[X::new] Generated auth cookie: {}", &cookie);
         let file = touch_auth_file(&log);
 
         Xserver {
@@ -48,7 +48,7 @@ impl Xserver {
     }
 
     pub fn start(&mut self) {
-        info!(&self.log, "[X]: start()");
+        info!(&self.log, "[X::start]");
 
         if TESTING {
             // In TESTING mode we don't start X
@@ -67,18 +67,18 @@ impl Xserver {
     }
 
     pub fn stop(&mut self) {
-        info!(&self.log, "[X]: stop()");
+        info!(&self.log, "[X::stop]");
 
         // TODO: There is probably more to do here
         // Kill X process
         if let Some(ref mut p) = self.process {
-            info!(&self.log, "[X]: Killing X with PID={}", p.id());
+            info!(&self.log, "[X::stop]: Killing X with PID={}", p.id());
             match p.kill() {
                 Ok(_res) => {}  //info!("[X]: Killed X with Result={:?}", res),
                 Err(_err) => {} //error!("[X]: Failed to kill X: {}", err),
             };
 
-            p.wait().expect("[X]: Failed to wait for stopped X server!");
+            p.wait().expect("[X::stop]: Failed to wait for stopped X server!");
         }
         self.process = None;
         // Delete generated auth file

@@ -850,6 +850,7 @@ dependencies = [
  "rdmcommon",
  "slog",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]

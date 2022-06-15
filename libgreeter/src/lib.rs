@@ -5,9 +5,10 @@ extern crate slog;
 
 extern crate tokio;
 
-use futures::{Sink, Stream};
+use futures::prelude::*;
 use slog::Logger;
 use tokio::net::UnixStream;
+use tokio_util::codec::Framed;
 
 use std::io;
 
@@ -16,8 +17,8 @@ use rdmcommon::util;
 
 pub struct RdmGreeter {
     log: Logger,
-    receiver: Box<dyn Stream<Item = Result<IpcMessage, IpcError>>>,
-    sender: Box<dyn Sink<IpcMessage, Error = IpcError>>,
+    rx: Box<dyn Stream<Item = Result<IpcMessage, IpcError>>>,
+    tx: Box<dyn Sink<IpcMessage, Error = IpcError>>,
 }
 
 #[derive(Debug)]
@@ -42,28 +43,30 @@ impl From<IpcError> for RdmGreeterError {
 impl RdmGreeter {
     pub async fn new<L: Into<Option<Logger>>>(logger: L) -> Result<RdmGreeter, RdmGreeterError> {
         // XXX: Reenable this when tokio-async-await is updated
-        /*let log = logger.into().unwrap_or_else(util::plain_logger);
+        let log = logger.into().unwrap_or_else(util::plain_logger);
         debug!(log, "[RdmGreeter::new] Connecting server socket");
-        let codec = IpcMessageCodec;
         let sock = UnixStream::connect("/home/florian/tmp/sock").await?;
-        let (tx, rx) = codec.framed(sock).split();
+        let (mut tx, mut rx) = Framed::new(sock, IpcMessageCodec).split();
 
         debug!(log, "[RdmGreeter::new] Sending ClientHello");
-        let tx = tx.send(IpcMessage::ClientHello).await?;
+        tx.send(IpcMessage::ClientHello).await?;
 
         debug!(log, "[RdmGreeter::new] Reading server response");
-        let (resp, rx) = rx.take(1).into_future().map_err(|(err, _)| err).await?;
+        let resp = match rx.next().await {
+            Some(m) => m,
+            // FIXME: extend IpcError with something like premature termination
+            None => return Err(RdmGreeterError::FailedHandshake),
+        };
         debug!(log, "[RdmGreeter::new] Got server response"; "response" => ?resp);
 
-        match resp {
-            Some(IpcMessage::ServerHello) => Ok(RdmGreeter {
-                receiver: Box::new(rx),
-                sender: Box::new(tx),
-                log: log,
+        match resp? {
+            IpcMessage::ServerHello => Ok(RdmGreeter {
+                rx: Box::new(rx),
+                tx: Box::new(tx),
+                log,
             }),
             _ => Err(RdmGreeterError::FailedHandshake),
-        }*/
-        Err(RdmGreeterError::FailedHandshake)
+        }
     }
 }
 

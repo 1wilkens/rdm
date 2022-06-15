@@ -33,16 +33,16 @@ impl Ui {
         theme_file.push(THEME_MAIN_FILE_NAME);
         theme_file.set_extension(THEME_MAIN_FILE_EXT);
 
-        let mut bg_file = theme_path.clone();
+        let mut bg_file = theme_path;
         bg_file.push(THEME_BACKGROUND_NAME);
         bg_file.set_extension(THEME_BACKGROUND_EXT);
 
         let b = Builder::from_file(theme_file.to_str().unwrap());
 
-        let w: Window = b
+        let window: Window = b
             .object(THEME_COMPONENT_WINDOW)
             .expect("[ui]: Failed to get main window from theme!");
-        let bg: Image = b
+        let background: Image = b
             .object(THEME_COMPONENT_BG)
             .expect("[ui]: Failed to get background image from theme!");
         let user: Entry = b
@@ -60,13 +60,13 @@ impl Ui {
         let pb = Pixbuf::from_file(bg_file.to_str().unwrap())
             .expect(&format!("[ui]: Failed to get background image pixbuf: {:?}", bg_file));
 
-        bg.set_from_pixbuf(Some(&pb));
+        background.set_from_pixbuf(Some(&pb));
 
         let instance = Rc::new(Ui {
-            window: w,
-            background: bg,
-            user: user,
-            secret: secret,
+            window,
+            background,
+            user,
+            secret,
             greeter: RefCell::from(greeter),
             log: util::plain_logger(),
         });

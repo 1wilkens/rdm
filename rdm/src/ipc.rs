@@ -41,24 +41,18 @@ impl IpcManager {
 
     async fn handle(&mut self, stream: UnixStream) -> Result<(), ipc::IpcError> {
         debug!(&self.log, "[IpcManager::handle] New client");
-        //let (mut writer, mut reader) = Framed::new(stream, ipc::IpcMessageCodec).split();
-        let mut framed = Framed::new(stream, ipc::IpcMessageCodec);
+        let (mut writer, mut reader) = Framed::new(stream, ipc::IpcMessageCodec).split();
 
-        framed.next().await;
-        framed.send(ipc::IpcMessage::ClientHello).await;
-
-        //framed.send(()).await
-        //let req = match reader.next().await {
-        //    Some(m) => m,
-        //    // FIXME: extend IpcError with something like premature termination
-        //    None => return Ok(()),
-        //};
-        //let resp = match req? {
-        //    ipc::IpcMessage::ClientHello => ipc::IpcMessage::ServerHello,
-        //    _ => return Err(ipc::IpcError::UnknownMessageType),
-        //};
-        //writer.send(resp).await
-        Ok(())
+        let req = match reader.next().await {
+            Some(m) => m,
+            // FIXME: extend IpcError with something like premature termination
+            None => return Ok(()),
+        };
+        let resp = match req? {
+            ipc::IpcMessage::ClientHello => ipc::IpcMessage::ServerHello,
+            _ => return Err(ipc::IpcError::UnknownMessageType),
+        };
+        writer.send(resp).await
     }
 }
 

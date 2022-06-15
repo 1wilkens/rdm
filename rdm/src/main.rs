@@ -79,7 +79,7 @@ async fn main() -> Result<(), String> {
     let foo = dbus::Manager::from_conn(conn).map_err(|_| "Failed to get DBUS connection")?;*/
 
     // XXX: Lets start this simple
-    // 1. init loggin and read config
+    // 1. init logging and read config
     // 2. init ipc socket (and start listening?)
     // 3. start x
     // 4. start greeter (binary from config?)
@@ -102,6 +102,7 @@ async fn main() -> Result<(), String> {
             }
             res = ipc.run() => {
                 debug!(&log, "[main] IPC result: {:?}", res);
+                break;
             }
             _ = signals.recv() => {
                 info!(&log, "[main] SIGHUP => reloading configuration");
