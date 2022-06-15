@@ -10,7 +10,7 @@ use libc::{close, pipe};
 use rand::{seq::SliceRandom, thread_rng};
 use slog::Logger;
 use uuid::{
-    adapter::{Hyphenated, Simple},
+    fmt::{Hyphenated, Simple},
     Uuid,
 };
 

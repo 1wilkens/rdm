@@ -20,8 +20,8 @@ slog = "^2.0"
 slog-async = "^2.0"
 slog-term = "^2.0"
 clap = "^2.29"
-rand = "^0.6"
-uuid = { version = "^0.7", features = ["v4"] }
+rand = "^0.8"
+uuid = { version = "^1.1", features = ["v4"] }
 
 dbus = "^0.9"
 dbus-tokio = "^0.7"
