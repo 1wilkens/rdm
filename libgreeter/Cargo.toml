@@ -12,8 +12,7 @@ edition = "2018"
 [dependencies]
 slog = "2.0"
 
-futures = "^0.1"
-tokio = { version = "^0.1" }
-tokio-uds = "^0.2"
+futures = "^0.3"
+tokio = { version = "^1.15" }
 
 rdmcommon = { path = "../libcommon"}

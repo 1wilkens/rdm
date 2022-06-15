@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-use gdk::Screen;
+use gdk::keys;
 use gdk_pixbuf::Pixbuf;
 use gtk::prelude::*;
 use gtk::{Builder, Entry, Image, Window};
@@ -37,29 +37,28 @@ impl Ui {
         bg_file.push(THEME_BACKGROUND_NAME);
         bg_file.set_extension(THEME_BACKGROUND_EXT);
 
-        let b = Builder::new_from_file(theme_file.to_str().unwrap());
+        let b = Builder::from_file(theme_file.to_str().unwrap());
 
         let w: Window = b
-            .get_object(THEME_COMPONENT_WINDOW)
+            .object(THEME_COMPONENT_WINDOW)
             .expect("[ui]: Failed to get main window from theme!");
         let bg: Image = b
-            .get_object(THEME_COMPONENT_BG)
+            .object(THEME_COMPONENT_BG)
             .expect("[ui]: Failed to get background image from theme!");
         let user: Entry = b
-            .get_object(THEME_COMPONENT_USER)
+            .object(THEME_COMPONENT_USER)
             .expect("[ui]: Failed to get user entry from theme!");
         let secret: Entry = b
-            .get_object(THEME_COMPONENT_SECRET)
+            .object(THEME_COMPONENT_SECRET)
             .expect("[ui]: Failed to get secret entry from theme!");
 
         // fit to screen dimensions
-        let (width, heigth) = (Screen::width(), Screen::height());
-        w.set_default_size(width, heigth);
+        //let (width, heigth) = (Screen::width(), Screen::height());
+        //w.set_default_size(width, heigth);
 
-        let pb =
-            Pixbuf::new_from_file_at_scale(bg_file.to_str().unwrap(), width, heigth, false).expect(
-                &format!("[ui]: Failed to get background image pixbuf: {:?}", bg_file),
-            );
+        //let pb = Pixbuf::from_file_at_scale(bg_file.to_str().unwrap(), width, heigth, false)
+        let pb = Pixbuf::from_file(bg_file.to_str().unwrap())
+            .expect(&format!("[ui]: Failed to get background image pixbuf: {:?}", bg_file));
 
         bg.set_from_pixbuf(Some(&pb));
 
@@ -76,8 +75,8 @@ impl Ui {
             let secret = instance.secret.clone();
 
             instance.user.connect_key_release_event(move |_, e| {
-                let val = (*e).get_keyval();
-                if val == KEYVAL_ENTER {
+                let val = (*e).keyval();
+                if val == keys::constants::ISO_Enter {
                     secret.grab_focus();
                 }
                 Inhibit(true)
@@ -90,10 +89,10 @@ impl Ui {
             let secret = instance.secret.clone();
 
             instance.secret.connect_key_release_event(move |_, e| {
-                let val = (*e).get_keyval();
-                if val == KEYVAL_ENTER {
-                    let _user = user.get_text().unwrap_or_default();
-                    let _password = secret.get_text().unwrap_or_default();
+                let val = (*e).keyval();
+                if val == keys::constants::ISO_Enter {
+                    let _user = user.text();
+                    let _password = secret.text();
 
                     // TODO: use librdmgreeter to talk to daemon to authenticate
                     /*i.greeter.borrow_mut().request_authentication(&user, &password);*/

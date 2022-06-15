@@ -21,7 +21,7 @@ fn setup_logger() -> Logger {
 
 fn main() {
     // XXX: Readd when tokio-async-await gets updated
-    /*tokio::run_async(*/async {
+    let _ = /*tokio::run_async(*/async {
         let log = setup_logger();
 
         let _greeter = rdmgreeter::RdmGreeter::new(log.clone())

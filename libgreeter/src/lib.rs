@@ -5,10 +5,9 @@ extern crate slog;
 
 extern crate tokio;
 
+use futures::{Sink, Stream};
 use slog::Logger;
-use tokio::codec::Decoder;
 use tokio::net::UnixStream;
-use tokio::prelude::*;
 
 use std::io;
 
@@ -17,8 +16,8 @@ use rdmcommon::util;
 
 pub struct RdmGreeter {
     log: Logger,
-    receiver: Box<Stream<Item = IpcMessage, Error = IpcError>>,
-    sender: Box<Sink<SinkItem = IpcMessage, SinkError = IpcError>>,
+    receiver: Box<dyn Stream<Item = Result<IpcMessage, IpcError>>>,
+    sender: Box<dyn Sink<IpcMessage, Error = IpcError>>,
 }
 
 #[derive(Debug)]
